@@ -1,5 +1,5 @@
 # Development files (not needed for end users)
-/Development/
+/development/
 
 # Rust
 /Core/target/
