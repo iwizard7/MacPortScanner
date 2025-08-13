@@ -1,0 +1,151 @@
+name: Build and Release MacPortScanner
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+        components: rustfmt, clippy
+        
+    - name: Cache Rust dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          Core/target
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-
+          
+    - name: Install create-dmg
+      run: brew install create-dmg
+      
+    - name: Build Rust Core
+      working-directory: Core
+      run: |
+        cargo build --release
+        cargo test --release
+        
+    - name: Build Swift UI
+      working-directory: UI
+      run: |
+        xcodebuild clean -project MacPortScanner.xcodeproj -scheme MacPortScanner
+        xcodebuild build -project MacPortScanner.xcodeproj -scheme MacPortScanner -configuration Release -derivedDataPath build
+        
+    - name: Create Distribution
+      run: |
+        mkdir -p dist
+        cp -R UI/build/Build/Products/Release/MacPortScanner.app dist/
+        
+    - name: Sign Application (if certificates available)
+      if: ${{ env.APPLE_CERTIFICATE_BASE64 != '' }}
+      env:
+        APPLE_CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+        APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+        APPLE_KEYCHAIN_PASSWORD: ${{ secrets.APPLE_KEYCHAIN_PASSWORD }}
+      run: |
+        # Create keychain
+        security create-keychain -p "$APPLE_KEYCHAIN_PASSWORD" build.keychain
+        security default-keychain -s build.keychain
+        security unlock-keychain -p "$APPLE_KEYCHAIN_PASSWORD" build.keychain
+        
+        # Import certificate
+        echo $APPLE_CERTIFICATE_BASE64 | base64 --decode > certificate.p12
+        security import certificate.p12 -k build.keychain -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+        security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$APPLE_KEYCHAIN_PASSWORD" build.keychain
+        
+        # Sign the app
+        codesign --force --options runtime --deep --sign "Developer ID Application" dist/MacPortScanner.app
+        
+    - name: Create DMG
+      run: |
+        create-dmg \
+          --volname "MacPortScanner" \
+          --window-pos 200 120 \
+          --window-size 600 300 \
+          --icon-size 100 \
+          --icon "MacPortScanner.app" 175 120 \
+          --hide-extension "MacPortScanner.app" \
+          --app-drop-link 425 120 \
+          --no-internet-enable \
+          "dist/MacPortScanner-${{ github.ref_name }}.dmg" \
+          "dist/"
+          
+    - name: Notarize DMG (if certificates available)
+      if: ${{ env.APPLE_ID != '' }}
+      env:
+        APPLE_ID: ${{ secrets.APPLE_ID }}
+        APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+        APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      run: |
+        xcrun notarytool submit "dist/MacPortScanner-${{ github.ref_name }}.dmg" \
+          --apple-id "$APPLE_ID" \
+          --password "$APPLE_PASSWORD" \
+          --team-id "$APPLE_TEAM_ID" \
+          --wait
+          
+        xcrun stapler staple "dist/MacPortScanner-${{ github.ref_name }}.dmg"
+        
+    - name: Upload Release Asset
+      uses: actions/upload-artifact@v3
+      with:
+        name: MacPortScanner-${{ github.ref_name }}
+        path: dist/MacPortScanner-${{ github.ref_name }}.dmg
+        
+    - name: Create Release
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: dist/MacPortScanner-${{ github.ref_name }}.dmg
+        name: MacPortScanner ${{ github.ref_name }}
+        body: |
+          ## MacPortScanner ${{ github.ref_name }}
+          
+          ### 🚀 Features
+          - High-performance port scanning optimized for macOS
+          - Native SwiftUI interface with dark/light mode support
+          - Real-time visualization and interactive charts
+          - Export results in JSON, CSV, XML formats
+          - Full macOS integration (notifications, Spotlight, etc.)
+          
+          ### 📥 Installation
+          1. Download the DMG file
+          2. Open it and drag MacPortScanner to Applications
+          3. Launch from Applications or Spotlight
+          
+          ### 🔒 Security Note
+          This app is not yet notarized by Apple. You may need to:
+          1. Right-click the app and select "Open"
+          2. Or go to System Preferences > Security & Privacy and allow the app
+          
+          ### 📋 System Requirements
+          - macOS 14.0 or later
+          - Apple Silicon (M1/M2/M3) or Intel processor
+          
+          ### 🐛 Known Issues
+          - First launch may take a few seconds to initialize
+          - Large CIDR ranges (>1000 IPs) may require increased timeout settings
+          
+          For support and documentation, visit: https://github.com/iwizard7/MacPortScanner
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

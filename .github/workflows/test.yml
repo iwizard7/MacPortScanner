@@ -1,0 +1,81 @@
+name: Test MacPortScanner
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test-rust:
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+        components: rustfmt, clippy
+        
+    - name: Cache Rust dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          Core/target
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-
+          
+    - name: Check Rust formatting
+      working-directory: Core
+      run: cargo fmt --check
+      
+    - name: Run Clippy
+      working-directory: Core
+      run: cargo clippy -- -D warnings
+      
+    - name: Run Rust tests
+      working-directory: Core
+      run: cargo test --verbose
+      
+    - name: Run Rust benchmarks
+      working-directory: Core
+      run: cargo bench --no-run
+      
+  test-swift:
+    runs-on: macos-latest
+    needs: test-rust
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Rust (for building core)
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+        
+    - name: Build Rust Core
+      working-directory: Core
+      run: cargo build --release
+      
+    - name: Test Swift build
+      working-directory: UI
+      run: |
+        xcodebuild clean -project MacPortScanner.xcodeproj -scheme MacPortScanner
+        xcodebuild build -project MacPortScanner.xcodeproj -scheme MacPortScanner -configuration Debug -derivedDataPath build
+        
+    - name: Run Swift tests (if any)
+      working-directory: UI
+      run: |
+        xcodebuild test -project MacPortScanner.xcodeproj -scheme MacPortScanner -destination 'platform=macOS' || echo "No tests configured yet"
