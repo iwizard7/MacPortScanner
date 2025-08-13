@@ -1,3 +1,7 @@
+#![allow(clippy::not_unsafe_ptr_arg_deref)]
+#![allow(static_mut_refs)]
+#![allow(unused_variables)]
+
 use serde_json;
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
@@ -25,6 +29,7 @@ pub extern "C" fn cleanup_scanner() {
 }
 
 #[no_mangle]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub extern "C" fn scan_target_async(
     target: *const c_char,
     ports: *const c_char,
@@ -88,6 +93,7 @@ pub extern "C" fn scan_target_async(
 }
 
 #[no_mangle]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub extern "C" fn update_config(config_json: *const c_char) -> bool {
     if config_json.is_null() {
         return false;
@@ -182,6 +188,7 @@ pub extern "C" fn get_preset_configs() -> *const c_char {
 }
 
 #[no_mangle]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub extern "C" fn free_string(s: *mut c_char) {
     if !s.is_null() {
         unsafe {
@@ -194,10 +201,11 @@ pub extern "C" fn free_string(s: *mut c_char) {
 type ProgressCallback = extern "C" fn(completed: u32, total: u32, current_target: *const c_char);
 
 #[no_mangle]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub extern "C" fn scan_with_progress(
     target: *const c_char,
     ports: *const c_char,
-    progress_callback: ProgressCallback,
+    _progress_callback: ProgressCallback,
     result_callback: extern "C" fn(*const c_char),
 ) -> bool {
     if target.is_null() {

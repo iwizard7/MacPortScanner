@@ -123,7 +123,7 @@ impl ScanConfig {
                 if let Ok(limit_str) = String::from_utf8(output.stdout) {
                     if let Ok(limit) = limit_str.trim().parse::<usize>() {
                         // Use 80% of available file descriptors
-                        let optimal_batch = (limit * 4 / 5).min(5000).max(100);
+                        let optimal_batch = (limit * 4 / 5).clamp(100, 5000);
                         self.batch_size = optimal_batch;
                     }
                 }
