@@ -1,10 +1,10 @@
+use serde_json;
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use serde_json;
 
-use crate::{Scanner, ScanConfig, ScanResult};
+use crate::{ScanConfig, Scanner};
 
 // Global scanner instance for C interface
 static mut SCANNER_INSTANCE: Option<Arc<Mutex<Scanner>>> = None;
@@ -69,7 +69,7 @@ pub extern "C" fn scan_target_async(
                         Ok(j) => j,
                         Err(e) => format!(r#"{{"error": "Serialization failed: {}"}}"#, e),
                     };
-                    
+
                     if let Ok(c_string) = CString::new(json) {
                         callback(c_string.as_ptr());
                     }
@@ -141,7 +141,7 @@ pub extern "C" fn get_statistics(callback: extern "C" fn(*const c_char)) -> bool
         rt.block_on(async move {
             let scanner = scanner_arc.lock().await;
             let stats = scanner.get_statistics().await;
-            
+
             match serde_json::to_string(&stats) {
                 Ok(json) => {
                     if let Ok(c_string) = CString::new(json) {
@@ -164,7 +164,7 @@ pub extern "C" fn get_statistics(callback: extern "C" fn(*const c_char)) -> bool
 #[no_mangle]
 pub extern "C" fn get_preset_configs() -> *const c_char {
     use crate::config::PresetConfig;
-    
+
     let presets = PresetConfig::get_presets();
     match serde_json::to_string(&presets) {
         Ok(json) => {

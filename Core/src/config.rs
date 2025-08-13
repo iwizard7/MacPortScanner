@@ -1,35 +1,35 @@
-use std::time::Duration;
 use serde::{Deserialize, Serialize};
+use std::time::Duration;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ScanConfig {
     /// Number of ports to scan concurrently
     pub batch_size: usize,
-    
+
     /// Timeout for each port connection attempt
     pub timeout: Duration,
-    
+
     /// Maximum number of retry attempts for each port
     pub max_retries: u8,
-    
+
     /// Delay between retry attempts
     pub retry_delay: Duration,
-    
+
     /// Delay between batches to be respectful to target
     pub delay_between_batches: Duration,
-    
+
     /// Whether to perform service detection
     pub detect_services: bool,
-    
+
     /// Whether to scan UDP ports (TCP is always scanned)
     pub scan_udp: bool,
-    
+
     /// Whether to randomize port order
     pub randomize_ports: bool,
-    
+
     /// Whether to resolve hostnames
     pub resolve_hostnames: bool,
-    
+
     /// Maximum number of IPs to scan from CIDR ranges
     pub max_ips_from_cidr: usize,
 }
@@ -117,7 +117,7 @@ impl ScanConfig {
         #[cfg(target_os = "macos")]
         {
             use std::process::Command;
-            
+
             // Check available file descriptors
             if let Ok(output) = Command::new("ulimit").arg("-n").output() {
                 if let Ok(limit_str) = String::from_utf8(output.stdout) {

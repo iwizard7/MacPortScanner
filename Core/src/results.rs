@@ -1,8 +1,8 @@
+use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::net::IpAddr;
 use std::time::Duration;
-use serde::{Deserialize, Serialize};
-use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
 use crate::config::ScanConfig;
@@ -56,7 +56,7 @@ impl ScanResult {
 
     pub fn get_services(&self) -> HashMap<String, Vec<(IpAddr, u16)>> {
         let mut services = HashMap::new();
-        
+
         for (ip, ports) in &self.results {
             for port in ports {
                 if port.is_open {
@@ -69,7 +69,7 @@ impl ScanResult {
                 }
             }
         }
-        
+
         services
     }
 
@@ -79,7 +79,7 @@ impl ScanResult {
 
     pub fn to_csv(&self) -> String {
         let mut csv = String::from("IP,Port,Status,Service,ResponseTime,Attempts\n");
-        
+
         for (ip, ports) in &self.results {
             for port in ports {
                 csv.push_str(&format!(
@@ -93,7 +93,7 @@ impl ScanResult {
                 ));
             }
         }
-        
+
         csv
     }
 
@@ -102,9 +102,15 @@ impl ScanResult {
         xml.push_str("<scan_result>\n");
         xml.push_str(&format!("  <id>{}</id>\n", self.id));
         xml.push_str(&format!("  <target>{}</target>\n", self.target));
-        xml.push_str(&format!("  <timestamp>{}</timestamp>\n", self.timestamp.to_rfc3339()));
-        xml.push_str(&format!("  <duration_ms>{}</duration_ms>\n", self.duration.as_millis()));
-        
+        xml.push_str(&format!(
+            "  <timestamp>{}</timestamp>\n",
+            self.timestamp.to_rfc3339()
+        ));
+        xml.push_str(&format!(
+            "  <duration_ms>{}</duration_ms>\n",
+            self.duration.as_millis()
+        ));
+
         xml.push_str("  <results>\n");
         for (ip, ports) in &self.results {
             xml.push_str(&format!("    <host ip=\"{}\">\n", ip));
@@ -122,7 +128,7 @@ impl ScanResult {
         }
         xml.push_str("  </results>\n");
         xml.push_str("</scan_result>\n");
-        
+
         xml
     }
 }
@@ -197,15 +203,15 @@ impl ScanStatistics {
         self.total_ports_scanned += scan_result.get_total_ports_scanned() as u64;
         self.total_open_ports += scan_result.get_total_open_ports() as u64;
         self.total_time += scan_result.duration;
-        
+
         if scan_result.duration < self.fastest_scan {
             self.fastest_scan = scan_result.duration;
         }
-        
+
         if scan_result.duration > self.slowest_scan {
             self.slowest_scan = scan_result.duration;
         }
-        
+
         self.average_scan_time = self.total_time / self.total_scans as u32;
     }
 
@@ -235,7 +241,7 @@ impl Default for ScanStatistics {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::net::Ipv4Addr;
+
 
     #[test]
     fn test_scan_result_creation() {
@@ -258,7 +264,7 @@ mod tests {
         let config = ScanConfig::default();
         let mut result = ScanResult::new("127.0.0.1".to_string(), config);
         result.duration = Duration::from_secs(1);
-        
+
         stats.update(&result);
         assert_eq!(stats.total_scans, 1);
     }
