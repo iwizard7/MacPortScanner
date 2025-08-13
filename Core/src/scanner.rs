@@ -68,13 +68,12 @@ impl Scanner {
             stats.total_time += duration;
         }
 
-        Ok(ScanResult {
-            target: target.to_string(),
-            results: all_results,
-            duration,
-            timestamp: chrono::Utc::now(),
-            scan_config: self.config.clone(),
-        })
+        let mut result = ScanResult::new(target.to_string(), self.config.clone());
+        result.results = all_results;
+        result.duration = duration;
+        result.timestamp = chrono::Utc::now();
+        
+        Ok(result)
     }
 
     async fn scan_ip(&self, ip: IpAddr, ports: &[u16]) -> Result<Vec<PortStatus>> {
@@ -120,12 +119,21 @@ impl Scanner {
                     };
                 }
                 Ok(Err(e)) => {
-                    debug!("Port {} closed on {} (attempt {}): {}", 
-                           socket_addr.port(), socket_addr.ip(), attempt, e);
+                    debug!(
+                        "Port {} closed on {} (attempt {}): {}",
+                        socket_addr.port(),
+                        socket_addr.ip(),
+                        attempt,
+                        e
+                    );
                 }
                 Err(_) => {
-                    debug!("Port {} timeout on {} (attempt {})", 
-                           socket_addr.port(), socket_addr.ip(), attempt);
+                    debug!(
+                        "Port {} timeout on {} (attempt {})",
+                        socket_addr.port(),
+                        socket_addr.ip(),
+                        attempt
+                    );
                 }
             }
 
@@ -186,15 +194,14 @@ impl Default for Scanner {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tokio::test;
 
     #[test]
-    async fn test_scanner_creation() {
+    fn test_scanner_creation() {
         let scanner = Scanner::new();
         assert_eq!(scanner.config.batch_size, 1000);
     }
 
-    #[test]
+    #[tokio::test]
     async fn test_localhost_scan() {
         let mut scanner = Scanner::new();
         let result = scanner.scan_target("127.0.0.1", "80,443").await;
