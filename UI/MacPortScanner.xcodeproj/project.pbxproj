@@ -7,72 +7,74 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1A2B3C4D5E6F7890 /* MacPortScannerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F7891 /* MacPortScannerApp.swift */; };
-		1A2B3C4D5E6F7892 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F7893 /* ContentView.swift */; };
-		1A2B3C4D5E6F7894 /* ScannerBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F7895 /* ScannerBridge.swift */; };
-		1A2B3C4D5E6F7896 /* ScanResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F7897 /* ScanResultView.swift */; };
-		1A2B3C4D5E6F7898 /* ConfigurationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F7899 /* ConfigurationView.swift */; };
-		1A2B3C4D5E6F789A /* VisualizationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F789B /* VisualizationView.swift */; };
-		1A2B3C4D5E6F789C /* libmacportscan_core.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F789D /* libmacportscan_core.a */; };
+		A1B2C3D4E5F67890 /* MacPortScannerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F67891 /* MacPortScannerApp.swift */; };
+		A1B2C3D4E5F67892 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F67893 /* ContentView.swift */; };
+		A1B2C3D4E5F67894 /* ScannerBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F67895 /* ScannerBridge.swift */; };
+		A1B2C3D4E5F67896 /* ScanResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F67897 /* ScanResultView.swift */; };
+		A1B2C3D4E5F67898 /* ConfigurationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F67899 /* ConfigurationView.swift */; };
+		A1B2C3D4E5F6789A /* VisualizationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6789B /* VisualizationView.swift */; };
+		A1B2C3D4E5F6789C /* libmacportscan_core.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6789D /* libmacportscan_core.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		1A2B3C4D5E6F7890 /* MacPortScanner.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MacPortScanner.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		1A2B3C4D5E6F7891 /* MacPortScannerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacPortScannerApp.swift; sourceTree = "<group>"; };
-		1A2B3C4D5E6F7893 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
-		1A2B3C4D5E6F7895 /* ScannerBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScannerBridge.swift; sourceTree = "<group>"; };
-		1A2B3C4D5E6F7897 /* ScanResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanResultView.swift; sourceTree = "<group>"; };
-		1A2B3C4D5E6F7899 /* ConfigurationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationView.swift; sourceTree = "<group>"; };
-		1A2B3C4D5E6F789B /* VisualizationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisualizationView.swift; sourceTree = "<group>"; };
-		1A2B3C4D5E6F789D /* libmacportscan_core.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmacportscan_core.a; path = ../Core/target/release/libmacportscan_core.a; sourceTree = "<group>"; };
+		A1B2C3D4E5F67890 /* MacPortScanner.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MacPortScanner.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A1B2C3D4E5F67891 /* MacPortScannerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacPortScannerApp.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F67893 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F67895 /* ScannerBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScannerBridge.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F67897 /* ScanResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanResultView.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F67899 /* ConfigurationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationView.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6789B /* VisualizationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisualizationView.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6789D /* libmacportscan_core.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmacportscan_core.a; path = ../Core/target/release/libmacportscan_core.a; sourceTree = "<group>"; };
+		A1B2C3D4E5F6789E /* MacPortScanner.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MacPortScanner.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		1A2B3C4D5E6F788D /* Frameworks */ = {
+		A1B2C3D4E5F6788D /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1A2B3C4D5E6F789C /* libmacportscan_core.a in Frameworks */,
+				A1B2C3D4E5F6789C /* libmacportscan_core.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		1A2B3C4D5E6F7887 = {
+		A1B2C3D4E5F67887 = {
 			isa = PBXGroup;
 			children = (
-				1A2B3C4D5E6F7892 /* MacPortScanner */,
-				1A2B3C4D5E6F7891 /* Products */,
-				1A2B3C4D5E6F789E /* Frameworks */,
+				A1B2C3D4E5F67892 /* MacPortScanner */,
+				A1B2C3D4E5F67891 /* Products */,
+				A1B2C3D4E5F6789F /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
-		1A2B3C4D5E6F7891 /* Products */ = {
+		A1B2C3D4E5F67891 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				1A2B3C4D5E6F7890 /* MacPortScanner.app */,
+				A1B2C3D4E5F67890 /* MacPortScanner.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		1A2B3C4D5E6F7892 /* MacPortScanner */ = {
+		A1B2C3D4E5F67892 /* MacPortScanner */ = {
 			isa = PBXGroup;
 			children = (
-				1A2B3C4D5E6F7891 /* MacPortScannerApp.swift */,
-				1A2B3C4D5E6F7893 /* ContentView.swift */,
-				1A2B3C4D5E6F7895 /* ScannerBridge.swift */,
-				1A2B3C4D5E6F7897 /* ScanResultView.swift */,
-				1A2B3C4D5E6F7899 /* ConfigurationView.swift */,
-				1A2B3C4D5E6F789B /* VisualizationView.swift */,
+				A1B2C3D4E5F67891 /* MacPortScannerApp.swift */,
+				A1B2C3D4E5F67893 /* ContentView.swift */,
+				A1B2C3D4E5F67895 /* ScannerBridge.swift */,
+				A1B2C3D4E5F67897 /* ScanResultView.swift */,
+				A1B2C3D4E5F67899 /* ConfigurationView.swift */,
+				A1B2C3D4E5F6789B /* VisualizationView.swift */,
+				A1B2C3D4E5F6789E /* MacPortScanner.entitlements */,
 			);
 			path = MacPortScanner;
 			sourceTree = "<group>";
 		};
-		1A2B3C4D5E6F789E /* Frameworks */ = {
+		A1B2C3D4E5F6789F /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				1A2B3C4D5E6F789D /* libmacportscan_core.a */,
+				A1B2C3D4E5F6789D /* libmacportscan_core.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -80,14 +82,14 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		1A2B3C4D5E6F788F /* MacPortScanner */ = {
+		A1B2C3D4E5F6788F /* MacPortScanner */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 1A2B3C4D5E6F789F /* Build configuration list for PBXNativeTarget "MacPortScanner" */;
+			buildConfigurationList = A1B2C3D4E5F678A0 /* Build configuration list for PBXNativeTarget "MacPortScanner" */;
 			buildPhases = (
-				1A2B3C4D5E6F788C /* Sources */,
-				1A2B3C4D5E6F788D /* Frameworks */,
-				1A2B3C4D5E6F788E /* Resources */,
-				1A2B3C4D5E6F78A0 /* Build Rust Library */,
+				A1B2C3D4E5F678A1 /* Build Rust Library */,
+				A1B2C3D4E5F6788C /* Sources */,
+				A1B2C3D4E5F6788D /* Frameworks */,
+				A1B2C3D4E5F6788E /* Resources */,
 			);
 			buildRules = (
 			);
@@ -95,25 +97,25 @@
 			);
 			name = MacPortScanner;
 			productName = MacPortScanner;
-			productReference = 1A2B3C4D5E6F7890 /* MacPortScanner.app */;
+			productReference = A1B2C3D4E5F67890 /* MacPortScanner.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		1A2B3C4D5E6F7888 /* Project object */ = {
+		A1B2C3D4E5F67888 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1500;
-				LastUpgradeCheck = 1500;
+				LastSwiftUpdateCheck = 1540;
+				LastUpgradeCheck = 1540;
 				TargetAttributes = {
-					1A2B3C4D5E6F788F = {
-						CreatedOnToolsVersion = 15.0;
+					A1B2C3D4E5F6788F = {
+						CreatedOnToolsVersion = 15.4;
 					};
 				};
 			};
-			buildConfigurationList = 1A2B3C4D5E6F788B /* Build configuration list for PBXProject "MacPortScanner" */;
+			buildConfigurationList = A1B2C3D4E5F6788B /* Build configuration list for PBXProject "MacPortScanner" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -121,18 +123,18 @@
 				en,
 				Base,
 			);
-			mainGroup = 1A2B3C4D5E6F7887;
-			productRefGroup = 1A2B3C4D5E6F7891 /* Products */;
+			mainGroup = A1B2C3D4E5F67887;
+			productRefGroup = A1B2C3D4E5F67891 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				1A2B3C4D5E6F788F /* MacPortScanner */,
+				A1B2C3D4E5F6788F /* MacPortScanner */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		1A2B3C4D5E6F788E /* Resources */ = {
+		A1B2C3D4E5F6788E /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -142,7 +144,7 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		1A2B3C4D5E6F78A0 /* Build Rust Library */ = {
+		A1B2C3D4E5F678A1 /* Build Rust Library */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -163,23 +165,23 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		1A2B3C4D5E6F788C /* Sources */ = {
+		A1B2C3D4E5F6788C /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1A2B3C4D5E6F7892 /* ContentView.swift in Sources */,
-				1A2B3C4D5E6F7894 /* ScannerBridge.swift in Sources */,
-				1A2B3C4D5E6F7896 /* ScanResultView.swift in Sources */,
-				1A2B3C4D5E6F7898 /* ConfigurationView.swift in Sources */,
-				1A2B3C4D5E6F789A /* VisualizationView.swift in Sources */,
-				1A2B3C4D5E6F7890 /* MacPortScannerApp.swift in Sources */,
+				A1B2C3D4E5F67892 /* ContentView.swift in Sources */,
+				A1B2C3D4E5F67894 /* ScannerBridge.swift in Sources */,
+				A1B2C3D4E5F67896 /* ScanResultView.swift in Sources */,
+				A1B2C3D4E5F67898 /* ConfigurationView.swift in Sources */,
+				A1B2C3D4E5F6789A /* VisualizationView.swift in Sources */,
+				A1B2C3D4E5F67890 /* MacPortScannerApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
-		1A2B3C4D5E6F789D /* Debug */ = {
+		A1B2C3D4E5F6789D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -242,7 +244,7 @@
 			};
 			name = Debug;
 		};
-		1A2B3C4D5E6F789E /* Release */ = {
+		A1B2C3D4E5F6789E /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -297,7 +299,7 @@
 			};
 			name = Release;
 		};
-		1A2B3C4D5E6F78A0 /* Debug */ = {
+		A1B2C3D4E5F678A0 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -328,7 +330,7 @@
 			};
 			name = Debug;
 		};
-		1A2B3C4D5E6F78A1 /* Release */ = {
+		A1B2C3D4E5F678A1 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -362,25 +364,25 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		1A2B3C4D5E6F788B /* Build configuration list for PBXProject "MacPortScanner" */ = {
+		A1B2C3D4E5F6788B /* Build configuration list for PBXProject "MacPortScanner" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				1A2B3C4D5E6F789D /* Debug */,
-				1A2B3C4D5E6F789E /* Release */,
+				A1B2C3D4E5F6789D /* Debug */,
+				A1B2C3D4E5F6789E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		1A2B3C4D5E6F789F /* Build configuration list for PBXNativeTarget "MacPortScanner" */ = {
+		A1B2C3D4E5F678A0 /* Build configuration list for PBXNativeTarget "MacPortScanner" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				1A2B3C4D5E6F78A0 /* Debug */,
-				1A2B3C4D5E6F78A1 /* Release */,
+				A1B2C3D4E5F678A0 /* Debug */,
+				A1B2C3D4E5F678A1 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
-	rootObject = 1A2B3C4D5E6F7888 /* Project object */;
+	rootObject = A1B2C3D4E5F67888 /* Project object */;
 }
