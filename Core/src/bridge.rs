@@ -59,26 +59,29 @@ pub extern "C" fn scan_target_async(
         }
     };
 
-    tokio::spawn(async move {
-        let mut scanner = scanner_arc.lock().await;
-        match scanner.scan_target(&target_str, &ports_str).await {
-            Ok(result) => {
-                let json = match serde_json::to_string(&result) {
-                    Ok(j) => j,
-                    Err(e) => format!(r#"{{"error": "Serialization failed: {}"}}"#, e),
-                };
-                
-                if let Ok(c_string) = CString::new(json) {
-                    callback(c_string.as_ptr());
+    std::thread::spawn(move || {
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        rt.block_on(async move {
+            let mut scanner = scanner_arc.lock().await;
+            match scanner.scan_target(&target_str, &ports_str).await {
+                Ok(result) => {
+                    let json = match serde_json::to_string(&result) {
+                        Ok(j) => j,
+                        Err(e) => format!(r#"{{"error": "Serialization failed: {}"}}"#, e),
+                    };
+                    
+                    if let Ok(c_string) = CString::new(json) {
+                        callback(c_string.as_ptr());
+                    }
+                }
+                Err(e) => {
+                    let error_json = format!(r#"{{"error": "{}"}}"#, e);
+                    if let Ok(c_string) = CString::new(error_json) {
+                        callback(c_string.as_ptr());
+                    }
                 }
             }
-            Err(e) => {
-                let error_json = format!(r#"{{"error": "{}"}}"#, e);
-                if let Ok(c_string) = CString::new(error_json) {
-                    callback(c_string.as_ptr());
-                }
-            }
-        }
+        });
     });
 
     true
@@ -113,9 +116,12 @@ pub extern "C" fn update_config(config_json: *const c_char) -> bool {
         }
     };
 
-    tokio::spawn(async move {
-        let mut scanner = scanner_arc.lock().await;
-        scanner.update_config(config);
+    std::thread::spawn(move || {
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        rt.block_on(async move {
+            let mut scanner = scanner_arc.lock().await;
+            scanner.update_config(config);
+        });
     });
 
     true
@@ -130,23 +136,26 @@ pub extern "C" fn get_statistics(callback: extern "C" fn(*const c_char)) -> bool
         }
     };
 
-    tokio::spawn(async move {
-        let scanner = scanner_arc.lock().await;
-        let stats = scanner.get_statistics().await;
-        
-        match serde_json::to_string(&stats) {
-            Ok(json) => {
-                if let Ok(c_string) = CString::new(json) {
-                    callback(c_string.as_ptr());
+    std::thread::spawn(move || {
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        rt.block_on(async move {
+            let scanner = scanner_arc.lock().await;
+            let stats = scanner.get_statistics().await;
+            
+            match serde_json::to_string(&stats) {
+                Ok(json) => {
+                    if let Ok(c_string) = CString::new(json) {
+                        callback(c_string.as_ptr());
+                    }
+                }
+                Err(e) => {
+                    let error_json = format!(r#"{{"error": "{}"}}"#, e);
+                    if let Ok(c_string) = CString::new(error_json) {
+                        callback(c_string.as_ptr());
+                    }
                 }
             }
-            Err(e) => {
-                let error_json = format!(r#"{{"error": "{}"}}"#, e);
-                if let Ok(c_string) = CString::new(error_json) {
-                    callback(c_string.as_ptr());
-                }
-            }
-        }
+        });
     });
 
     true

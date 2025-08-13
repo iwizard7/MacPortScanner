@@ -34,7 +34,7 @@ impl ScanResult {
         for (ip, ports) in &self.results {
             for port in ports {
                 if port.is_open {
-                    open_ports.push(*ip, port.port);
+                    open_ports.push((*ip, port.port));
                 }
             }
         }
@@ -64,7 +64,7 @@ impl ScanResult {
                         services
                             .entry(service.clone())
                             .or_insert_with(Vec::new)
-                            .push(*ip, port.port);
+                            .push((*ip, port.port));
                     }
                 }
             }

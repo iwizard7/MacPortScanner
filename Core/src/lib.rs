@@ -39,17 +39,18 @@ pub extern "C" fn scanner_scan_async(
         return false;
     }
 
-    unsafe {
-        let scanner = &mut *scanner;
-        let target_str = CStr::from_ptr(target).to_string_lossy();
-        
-        let ports_str = if ports.is_null() {
-            "1-65535".to_string()
-        } else {
-            CStr::from_ptr(ports).to_string_lossy().to_string()
-        };
+    let target_str = unsafe { CStr::from_ptr(target).to_string_lossy().to_string() };
+    
+    let ports_str = if ports.is_null() {
+        "1-65535".to_string()
+    } else {
+        unsafe { CStr::from_ptr(ports).to_string_lossy().to_string() }
+    };
 
-        tokio::spawn(async move {
+    std::thread::spawn(move || {
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        rt.block_on(async {
+            let mut scanner = Scanner::new();
             match scanner.scan_target(&target_str, &ports_str).await {
                 Ok(results) => {
                     let json = serde_json::to_string(&results).unwrap_or_default();
@@ -63,7 +64,24 @@ pub extern "C" fn scanner_scan_async(
                 }
             }
         });
-    }
+    });
 
     true
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_scanner_creation() {
+        let scanner = Scanner::new();
+        assert_eq!(scanner.config.batch_size, 1000);
+    }
+
+    #[test]
+    fn test_config_validation() {
+        let config = ScanConfig::default();
+        assert!(config.validate().is_ok());
+    }
 }
