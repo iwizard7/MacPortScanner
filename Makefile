@@ -9,22 +9,27 @@ all: build
 # Quick build for development
 quick:
 	@echo "⚡ Quick build..."
-	@./quick-build.sh
+	@./Development/quick-build.sh
 
 # Full local build
 build:
 	@echo "🚀 Full build..."
-	@./build-local.sh
+	@./Development/build-local.sh
+
+# Development workflow
+workflow:
+	@echo "🚀 Development workflow..."
+	@./Development/dev-workflow.sh
 
 # Development build with all checks
 dev:
 	@echo "🛠️  Development build..."
-	@./dev-build.sh
+	@./Development/dev-build.sh
 
 # Development build with watch mode
 watch:
 	@echo "👀 Watch mode..."
-	@./dev-build.sh --watch
+	@./Development/dev-build.sh --watch
 
 # Clean all build artifacts
 clean:
@@ -74,7 +79,7 @@ bench:
 # Create DMG installer
 dmg: build
 	@echo "💿 Creating DMG..."
-	@./create-dmg.sh
+	@./Development/create-dmg.sh
 
 # Install the application to /Applications
 install: build
@@ -102,6 +107,21 @@ setup:
 		echo "⚠️  Setup script not found in Development/"; \
 	fi
 
+# Smart commit
+commit:
+	@echo "🤖 Creating smart commit..."
+	@./Development/smart-commit.sh
+
+# Update changelog
+changelog:
+	@echo "📝 Updating changelog..."
+	@./Development/update-changelog.sh
+
+# Full workflow
+all-workflow:
+	@echo "🚀 Full development workflow..."
+	@./Development/dev-workflow.sh --all
+
 # Update dependencies
 update:
 	@echo "🔄 Updating dependencies..."
@@ -115,12 +135,12 @@ audit:
 # Release build (optimized)
 release:
 	@echo "🚀 Release build..."
-	@./build-local.sh --clean
+	@./Development/build-local.sh --clean
 
 # Debug build
 debug:
 	@echo "🐛 Debug build..."
-	@./build-local.sh --debug
+	@./Development/build-local.sh --debug
 
 # Run the application
 run: quick
@@ -141,11 +161,17 @@ help:
 	@echo "MacPortScanner Build System"
 	@echo ""
 	@echo "🚀 Build Commands:"
-	@echo "  make build     - Full production build"
-	@echo "  make quick     - Fast development build"
-	@echo "  make dev       - Development build with all checks"
-	@echo "  make debug     - Debug build"
-	@echo "  make release   - Optimized release build"
+	@echo "  make build       - Full production build"
+	@echo "  make quick       - Fast development build"
+	@echo "  make dev         - Development build with all checks"
+	@echo "  make debug       - Debug build"
+	@echo "  make release     - Optimized release build"
+	@echo ""
+	@echo "🤖 Workflow Commands:"
+	@echo "  make workflow    - Interactive development workflow"
+	@echo "  make all-workflow- Full automated workflow"
+	@echo "  make commit      - Smart commit"
+	@echo "  make changelog   - Update changelog"
 	@echo ""
 	@echo "🧪 Testing & Quality:"
 	@echo "  make test      - Run all tests"
