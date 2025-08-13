@@ -242,7 +242,6 @@ impl Default for ScanStatistics {
 mod tests {
     use super::*;
 
-
     #[test]
     fn test_scan_result_creation() {
         let config = ScanConfig::default();
