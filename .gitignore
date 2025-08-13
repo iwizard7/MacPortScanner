@@ -1,3 +1,6 @@
+# Development files (not needed for end users)
+/Development/
+
 # Rust
 /Core/target/
 /Core/Cargo.lock
