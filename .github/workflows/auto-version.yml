@@ -144,14 +144,10 @@ jobs:
           
           # Коммитим изменения
           git add package.json CHANGELOG.md
-          git commit -m "🤖 chore(release): bump version to $NEW_VERSION [skip-version]
-
-Automated version bump based on commit: $COMMIT_MSG"
+          git commit -m "🤖 chore(release): bump version to $NEW_VERSION [skip-version]"
           
           # Создаем тег
-          git tag -a "v$NEW_VERSION" -m "Release v$NEW_VERSION
-
-Automated release based on commit: $COMMIT_MSG"
+          git tag -a "v$NEW_VERSION" -m "Release v$NEW_VERSION"
           
           # Пушим изменения и тег
           git push origin main
