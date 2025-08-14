@@ -1,0 +1,98 @@
+name: 🔍 Build Check
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths-ignore:
+      - '**.md'
+      - '.gitignore'
+      - 'LICENSE'
+  pull_request:
+    branches: [ main ]
+    paths-ignore:
+      - '**.md'
+      - '.gitignore'
+      - 'LICENSE'
+
+env:
+  NODE_VERSION: '18'
+
+jobs:
+  build-check:
+    name: 🔨 Build Check
+    runs-on: macos-latest
+    
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🖥️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: |
+          echo "📦 Installing dependencies..."
+          npm ci
+
+      - name: 🔍 Run linting
+        run: |
+          echo "🔍 Running ESLint..."
+          npm run lint
+        continue-on-error: true
+
+      - name: 🔧 Type checking
+        run: |
+          echo "🔧 Running TypeScript type check..."
+          npm run type-check
+
+      - name: 🔨 Build Electron main process
+        run: |
+          echo "🔨 Compiling TypeScript for Electron..."
+          npx tsc -p tsconfig.electron.json --outDir build/dist
+
+      - name: ⚛️ Build React application
+        run: |
+          echo "⚛️ Building React application..."
+          npx vite build --outDir build/dist
+
+      - name: 📁 Verify build artifacts
+        run: |
+          echo "📁 Verifying build artifacts..."
+          
+          # Проверяем что все файлы созданы
+          if [ ! -f "build/dist/main.js" ]; then
+            echo "❌ main.js not found"
+            exit 1
+          fi
+          
+          if [ ! -f "build/dist/preload.js" ]; then
+            echo "❌ preload.js not found"
+            exit 1
+          fi
+          
+          if [ ! -f "build/dist/index.html" ]; then
+            echo "❌ index.html not found"
+            exit 1
+          fi
+          
+          echo "✅ All build artifacts present"
+          
+          # Показываем размеры
+          echo "📊 Build sizes:"
+          du -sh build/dist/*
+
+      - name: 🧪 Test build (dry run)
+        run: |
+          echo "🧪 Testing electron-builder (dry run)..."
+          cp -r build/dist ./dist
+          npx electron-builder --mac --dir --publish never
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+
+      - name: ✅ Build Success
+        run: |
+          echo "✅ Build check completed successfully!"
+          echo "🎯 Ready for release when tagged"
