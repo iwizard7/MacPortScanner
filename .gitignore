@@ -79,3 +79,6 @@ coverage/
 # Cache
 .cache/
 .npm/
+
+# Development scripts (not for repository)
+.dev-scripts/
