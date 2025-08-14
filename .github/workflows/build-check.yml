@@ -52,20 +52,27 @@ jobs:
         run: |
           echo "🔨 Compiling TypeScript for Electron..."
           mkdir -p build/dist
-          # Компилируем напрямую в build/dist
-          npx tsc src/main.ts --outDir build/dist --target ES2020 --module CommonJS --esModuleInterop --skipLibCheck --types node,electron
-          npx tsc src/preload.ts --outDir build/dist --target ES2020 --module CommonJS --esModuleInterop --skipLibCheck --types node,electron
+          # Используем tsconfig.electron.json для правильной компиляции
+          npx tsc -p tsconfig.electron.json
           echo "📁 Checking compiled files..."
           ls -la build/dist/ || echo "build/dist/ folder not found"
-          if [ -f "build/dist/main.js" ]; then
-            echo "✅ main.js found"
+          if [ -f "build/dist/src/main.js" ]; then
+            echo "✅ main.js found at build/dist/src/main.js"
+            cp build/dist/src/main.js build/dist/main.js
+          elif [ -f "build/dist/main.js" ]; then
+            echo "✅ main.js found at build/dist/main.js"
           else
-            echo "❌ main.js not found"
+            echo "❌ main.js not found, checking structure:"
+            find build/dist -name "*.js" -type f
           fi
-          if [ -f "build/dist/preload.js" ]; then
-            echo "✅ preload.js found"
+          if [ -f "build/dist/src/preload.js" ]; then
+            echo "✅ preload.js found at build/dist/src/preload.js"
+            cp build/dist/src/preload.js build/dist/preload.js
+          elif [ -f "build/dist/preload.js" ]; then
+            echo "✅ preload.js found at build/dist/preload.js"
           else
-            echo "❌ preload.js not found"
+            echo "❌ preload.js not found, checking structure:"
+            find build/dist -name "*.js" -type f
           fi
 
       - name: ⚛️ Build React application
@@ -76,20 +83,28 @@ jobs:
       - name: 📁 Verify build artifacts
         run: |
           echo "📁 Verifying build artifacts..."
+          echo "📂 Current build structure:"
+          find build/dist -type f -name "*.js" -o -name "*.html" -o -name "*.css" | head -20
           
           # Проверяем что все файлы созданы
           if [ ! -f "build/dist/main.js" ]; then
-            echo "❌ main.js not found"
+            echo "❌ main.js not found in build/dist/"
+            echo "🔍 Searching for main.js..."
+            find . -name "main.js" -type f
             exit 1
           fi
           
           if [ ! -f "build/dist/preload.js" ]; then
-            echo "❌ preload.js not found"
+            echo "❌ preload.js not found in build/dist/"
+            echo "🔍 Searching for preload.js..."
+            find . -name "preload.js" -type f
             exit 1
           fi
           
           if [ ! -f "build/dist/index.html" ]; then
-            echo "❌ index.html not found"
+            echo "❌ index.html not found in build/dist/"
+            echo "🔍 Searching for index.html..."
+            find . -name "index.html" -type f
             exit 1
           fi
           
@@ -97,7 +112,7 @@ jobs:
           
           # Показываем размеры
           echo "📊 Build sizes:"
-          du -sh build/dist/*
+          du -sh build/dist/* | head -10
 
       - name: 🧪 Test build (dry run)
         run: |

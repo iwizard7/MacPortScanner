@@ -3,11 +3,19 @@
   "compilerOptions": {
     "module": "CommonJS",
     "target": "ES2020",
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "noEmit": false,
-    "types": ["node", "electron"]
+    "outDir": "./build/dist",
+    "noEmit": false
   },
-  "include": ["src/main.ts", "src/preload.ts"],
-  "exclude": ["src/**/*.tsx", "src/**/*.jsx", "src/App.tsx", "src/main.tsx"]
+  "include": [
+    "src/main.ts",
+    "src/preload.ts"
+  ],
+  "exclude": [
+    "src/App.tsx",
+    "src/components/**/*",
+    "src/main.tsx",
+    "node_modules",
+    "build",
+    "dist"
+  ]
 }
