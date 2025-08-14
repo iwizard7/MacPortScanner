@@ -282,14 +282,8 @@ if [ "$DO_BUILD" = true ]; then
         # Создаем дистрибутив
         execute_step "Создание дистрибутива" "mkdir -p dist && cp -R UI/build/Build/Products/Release/MacPortScanner.app dist/"
     else
-        print_warning "Xcode проект не найден. Создаем заглушку приложения..."
-        execute_step "Создание заглушки приложения" "mkdir -p dist/MacPortScanner.app/Contents/MacOS && cat > dist/MacPortScanner.app/Contents/MacOS/MacPortScanner << 'EOF'
-#!/bin/bash
-echo '🚀 MacPortScanner v1.0.0'
-echo 'Rust Core библиотека готова к использованию!'
-echo 'UI компонент в разработке...'
-EOF
-chmod +x dist/MacPortScanner.app/Contents/MacOS/MacPortScanner"
+        print_warning "Xcode проект не найден. Создаем продвинутое приложение с Rust интеграцией..."
+        execute_step "Создание продвинутого приложения" "./create_app.sh"
     fi
     
     print_success "Приложение собрано: dist/MacPortScanner.app"

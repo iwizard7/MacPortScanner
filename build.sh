@@ -74,36 +74,13 @@ if [ -f "UI/MacPortScanner.xcodeproj/project.pbxproj" ]; then
     mkdir -p dist
     cp -R UI/build/Build/Products/Release/MacPortScanner.app dist/
 else
-    print_warning "Xcode проект не найден. Создаем заглушку приложения..."
-    mkdir -p dist/MacPortScanner.app/Contents/MacOS
-    cat > dist/MacPortScanner.app/Contents/MacOS/MacPortScanner << 'EOF'
-#!/bin/bash
-echo "🚀 MacPortScanner v1.0.0"
-echo "Rust Core библиотека готова к использованию!"
-echo "UI компонент в разработке..."
-EOF
-    chmod +x dist/MacPortScanner.app/Contents/MacOS/MacPortScanner
-    
-    # Создаем Info.plist
-    mkdir -p dist/MacPortScanner.app/Contents
-    cat > dist/MacPortScanner.app/Contents/Info.plist << 'EOF'
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>CFBundleExecutable</key>
-    <string>MacPortScanner</string>
-    <key>CFBundleIdentifier</key>
-    <string>com.macportscanner.app</string>
-    <key>CFBundleName</key>
-    <string>MacPortScanner</string>
-    <key>CFBundleVersion</key>
-    <string>1.0.0</string>
-    <key>CFBundleShortVersionString</key>
-    <string>1.0.0</string>
-</dict>
-</plist>
-EOF
+    print_warning "Xcode проект не найден. Создаем продвинутое приложение..."
+    if [ -f "./create_app.sh" ]; then
+        ./create_app.sh
+    else
+        print_error "create_app.sh не найден"
+        exit 1
+    fi
 fi
 
 print_success "Сборка завершена успешно!"
