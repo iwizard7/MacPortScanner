@@ -1,5 +1,7 @@
 # Development files (not needed for end users)
-/development/
+development/
+*.tmp
+.tmp/
 
 # Rust
 /Core/target/
