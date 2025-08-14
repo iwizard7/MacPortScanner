@@ -1,0 +1,112 @@
+{
+  "name": "macportscanner",
+  "version": "1.0.0",
+  "description": "Нативный сканер портов для macOS с поддержкой Apple Silicon",
+  "main": "dist/main.js",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:electron\" \"npm run dev:react\"",
+    "dev:electron": "tsc -p tsconfig.electron.json --outDir build/dist && electron build/dist/main.js",
+    "dev:react": "vite",
+    "build": "npm run build:electron && npm run build:react",
+    "build:electron": "tsc -p tsconfig.electron.json --outDir build/dist",
+    "build:react": "vite build --outDir build/dist",
+    "build:mac": "npm run build && electron-builder --mac",
+    "build:mac-arm64": "npm run build && electron-builder --mac --arm64",
+    "build:mac-universal": "npm run build && electron-builder --mac --universal",
+    "preview": "vite preview",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "type-check": "tsc --noEmit"
+  },
+  "keywords": ["port-scanner", "macos", "apple-silicon", "network", "security"],
+  "author": "Mac Port Scanner Team",
+  "license": "MIT",
+  "dependencies": {
+    "@radix-ui/react-alert-dialog": "^1.0.5",
+    "@radix-ui/react-dialog": "^1.0.5",
+    "@radix-ui/react-dropdown-menu": "^2.0.6",
+    "@radix-ui/react-label": "^2.0.2",
+    "@radix-ui/react-progress": "^1.0.3",
+    "@radix-ui/react-select": "^2.0.0",
+    "@radix-ui/react-separator": "^1.0.3",
+    "@radix-ui/react-slot": "^1.0.2",
+    "@radix-ui/react-tabs": "^1.0.4",
+    "@radix-ui/react-toast": "^1.1.5",
+    "@radix-ui/react-tooltip": "^1.0.7",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.0.0",
+    "electron-store": "^8.1.0",
+    "lucide-react": "^0.400.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "tailwind-merge": "^2.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "@vitejs/plugin-react": "^4.3.0",
+    "autoprefixer": "^10.4.20",
+    "concurrently": "^8.0.0",
+    "electron": "^28.0.0",
+    "electron-builder": "^24.0.0",
+    "eslint": "^8.0.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.0",
+    "postcss": "^8.4.0",
+    "tailwindcss": "^3.4.0",
+    "tailwindcss-animate": "^1.0.7",
+    "typescript": "^5.0.0",
+    "vite": "^5.0.0"
+  },
+  "build": {
+    "appId": "com.macportscanner.app",
+    "productName": "MacPortScanner",
+    "directories": {
+      "output": "build/release"
+    },
+    "files": [
+      "dist/**/*",
+      "node_modules/**/*",
+      "!node_modules/.cache"
+    ],
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["arm64", "x64"]
+        },
+        {
+          "target": "zip",
+          "arch": ["arm64", "x64"]
+        }
+      ],
+
+      "darkModeSupport": true,
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false
+    },
+    "dmg": {
+      "title": "MacPortScanner",
+      "window": {
+        "width": 540,
+        "height": 380
+      },
+      "contents": [
+        {
+          "x": 140,
+          "y": 200,
+          "type": "file"
+        },
+        {
+          "x": 400,
+          "y": 200,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    }
+  }
+}
