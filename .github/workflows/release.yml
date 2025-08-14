@@ -11,7 +11,7 @@ env:
 jobs:
   build-and-release:
     name: 🔨 Build and Release
-    runs-on: macos-latest
+    runs-on: macos-14
     
     steps:
       - name: 📥 Checkout repository
@@ -122,38 +122,24 @@ jobs:
           
           # Если не нашли в CHANGELOG, создаем базовое описание
           if [ -z "$RELEASE_NOTES" ]; then
-            RELEASE_NOTES="## MacPortScanner ${{ steps.version.outputs.TAG_NAME }}
-
-🚀 Профессиональный сканер портов для macOS с оптимизацией для Apple Silicon
-
-### 📦 Файлы для скачивания
-
-- **MacPortScanner-${{ steps.version.outputs.VERSION }}-arm64.dmg** - Для Apple Silicon (M1/M2/M3) - Рекомендуется
-- **MacPortScanner-${{ steps.version.outputs.VERSION }}.dmg** - Для Intel Mac  
-- **ZIP архивы** - Альтернативный формат установки
-
-### 🔧 Системные требования
-
-- macOS 10.15 (Catalina) или новее
-- Рекомендуется: Apple Silicon для максимальной производительности
-
-### 📝 Установка
-
-1. Скачайте DMG файл для вашей архитектуры
-2. Откройте DMG и перетащите приложение в папку Applications
-3. Запустите MacPortScanner из Launchpad
-
-### ⚡ Особенности
-
-- 🚀 Оптимизация для Apple Silicon (до 100 параллельных соединений)
-- 🎨 Нативный macOS интерфейс с темной темой
-- 🔧 Гибкие настройки сканирования (TCP/SYN/UDP)
-- 📊 Экспорт результатов в JSON/CSV
-- ⌨️ Горячие клавиши для быстрого доступа"
+            echo "## MacPortScanner ${{ steps.version.outputs.TAG_NAME }}" > release_notes.md
+            echo "" >> release_notes.md
+            echo "🚀 Профессиональный сканер портов для macOS с оптимизацией для Apple Silicon" >> release_notes.md
+            echo "" >> release_notes.md
+            echo "### 📦 Файлы для скачивания" >> release_notes.md
+            echo "" >> release_notes.md
+            echo "- **MacPortScanner-${{ steps.version.outputs.VERSION }}-arm64.dmg** - Для Apple Silicon (M1/M2/M3)" >> release_notes.md
+            echo "- **MacPortScanner-${{ steps.version.outputs.VERSION }}.dmg** - Для Intel Mac" >> release_notes.md
+            echo "- **ZIP архивы** - Альтернативный формат установки" >> release_notes.md
+            echo "" >> release_notes.md
+            echo "### 🔧 Системные требования" >> release_notes.md
+            echo "" >> release_notes.md
+            echo "- macOS 10.15 (Catalina) или новее" >> release_notes.md
+            echo "- Рекомендуется: Apple Silicon для максимальной производительности" >> release_notes.md
+          else
+            echo "$RELEASE_NOTES" > release_notes.md
           fi
           
-          # Сохраняем в файл для GitHub Release
-          echo "$RELEASE_NOTES" > release_notes.md
           echo "✅ Release notes generated"
 
       - name: 🚀 Create GitHub Release

@@ -108,14 +108,12 @@ jobs:
           # Создаем новую запись для CHANGELOG
           if [ -f "CHANGELOG.md" ]; then
             # Создаем временный файл с новой записью
-            cat > /tmp/changelog_entry << EOF
-
-## [$NEW_VERSION] - $DATE
-
-### 🤖 Автоматическое обновление
-- $COMMIT_MSG
-
-EOF
+            echo "" > /tmp/changelog_entry
+            echo "## [$NEW_VERSION] - $DATE" >> /tmp/changelog_entry
+            echo "" >> /tmp/changelog_entry
+            echo "### 🤖 Автоматическое обновление" >> /tmp/changelog_entry
+            echo "- $COMMIT_MSG" >> /tmp/changelog_entry
+            echo "" >> /tmp/changelog_entry
             
             # Вставляем новую запись в CHANGELOG.md
             awk '
