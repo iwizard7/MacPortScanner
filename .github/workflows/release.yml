@@ -50,11 +50,12 @@ jobs:
       - name: 🔨 Build Electron main process
         run: |
           echo "🔨 Compiling TypeScript for Electron..."
-          npx tsc -p tsconfig.electron.json
-          # Копируем Electron файлы в build/dist
           mkdir -p build/dist
-          cp dist/main.js build/dist/
-          cp dist/preload.js build/dist/
+          # Компилируем напрямую в build/dist
+          npx tsc src/main.ts --outDir build/dist --target ES2020 --module CommonJS --esModuleInterop --skipLibCheck --types node,electron
+          npx tsc src/preload.ts --outDir build/dist --target ES2020 --module CommonJS --esModuleInterop --skipLibCheck --types node,electron
+          echo "📁 Checking compiled files..."
+          ls -la build/dist/ || echo "build/dist/ folder not found"
 
       - name: ⚛️ Build React application
         run: |
