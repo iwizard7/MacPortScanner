@@ -16,7 +16,7 @@
     "noEmit": false,
     "outDir": "./build/dist",
     "jsx": "react-jsx",
-    "types": ["node", "electron", "vite/client"]
+    "types": ["node", "electron", "vite/client", "jest"]
   },
   "include": [
     "src/**/*"
