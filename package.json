@@ -64,7 +64,11 @@
     "vite": "^5.0.0",
     "jest": "^29.0.0",
     "@types/jest": "^29.0.0",
-    "ts-jest": "^29.0.0"
+    "ts-jest": "^29.0.0",
+    "@testing-library/react": "^14.0.0",
+    "@testing-library/jest-dom": "^6.0.0",
+    "identity-obj-proxy": "^3.0.0",
+    "jest-environment-jsdom": "^29.0.0"
   },
   "build": {
     "appId": "com.macportscanner.app",
