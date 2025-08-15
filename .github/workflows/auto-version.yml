@@ -7,7 +7,6 @@ on:
       - '**.md'
       - '.gitignore'
       - 'LICENSE'
-      - '.github/**'
 
 env:
   NODE_VERSION: '18'
@@ -20,8 +19,8 @@ jobs:
   auto-version:
     name: 📦 Auto Version Bump
     runs-on: ubuntu-latest
-    # Запускаем только если коммит не содержит [skip-version]
-    if: "!contains(github.event.head_commit.message, '[skip-version]')"
+    # Запускаем только если коммит не содержит [skip-version] и не изменяет только workflow файлы
+    if: "!contains(github.event.head_commit.message, '[skip-version]') && !contains(github.event.head_commit.message, 'workflow')"
     
     steps:
       - name: 📥 Checkout repository
