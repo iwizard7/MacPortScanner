@@ -1,6 +1,6 @@
 {
   "name": "macportscanner",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Нативный сканер портов для macOS с поддержкой Apple Silicon",
   "main": "dist/main.js",
   "scripts": {
