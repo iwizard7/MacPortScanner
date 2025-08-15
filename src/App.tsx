@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { Button } from './components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './components/ui/card'
 import { Input } from './components/ui/input'
@@ -9,6 +9,7 @@ import { Progress } from './components/ui/progress'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './components/ui/tabs'
 import { Alert, AlertDescription } from './components/ui/alert'
 import { Separator } from './components/ui/separator'
+import { PortInput } from './components/ui/PortInput'
 import { 
   Play, 
   Square, 
@@ -23,11 +24,12 @@ import {
   Settings,
   Zap
 } from 'lucide-react'
-import type { ScanRequest, ScanResult, SystemInfo } from './preload'
+import type { ScanRequest, ScanResult, SystemInfo, AppSettings, ParsedPorts } from './types'
 
 function App() {
   const [target, setTarget] = useState('127.0.0.1')
-  const [ports, setPorts] = useState('22,80,443,3389,5432,3306')
+  const [portInput, setPortInput] = useState('22,80,443,3389,5432,3306')
+  const [parsedPorts, setParsedPorts] = useState<ParsedPorts | null>(null)
   const [isScanning, setIsScanning] = useState(false)
   const [progress, setProgress] = useState(0)
   const [results, setResults] = useState<ScanResult[]>([])
@@ -37,6 +39,7 @@ function App() {
   const [systemInfo, setSystemInfo] = useState<SystemInfo | null>(null)
   const [scanMethod, setScanMethod] = useState<'tcp' | 'syn' | 'udp'>('tcp')
   const [timeout, setTimeout] = useState(3000)
+  const [portValidationErrors, setPortValidationErrors] = useState<string[]>([])
 
   const commonPorts = [
     { port: 21, service: 'FTP' },
@@ -67,9 +70,9 @@ function App() {
     window.electronAPI.getSystemInfo().then(setSystemInfo)
 
     // Загружаем сохраненные настройки
-    window.electronAPI.loadSettings().then(settings => {
+    window.electronAPI.loadSettings().then((settings: AppSettings) => {
       if (settings.target) setTarget(settings.target)
-      if (settings.ports) setPorts(settings.ports)
+      if (settings.ports) setPortInput(settings.ports)
       if (settings.timeout) setTimeout(settings.timeout)
       if (settings.scanMethod) setScanMethod(settings.scanMethod)
     })
@@ -105,22 +108,32 @@ function App() {
     }
   }, [])
 
+  // Обработчики для PortInput компонента
+  const handlePortInputChange = useCallback((value: string, parsed: ParsedPorts) => {
+    setPortInput(value)
+    setParsedPorts(parsed)
+  }, [])
+
+  const handlePortValidationChange = useCallback((isValid: boolean, errors: string[]) => {
+    setPortValidationErrors(errors)
+  }, [])
+
   const setCommonPorts = () => {
-    setPorts(commonPorts.map(p => p.port).join(','))
+    setPortInput(commonPorts.map(p => p.port).join(','))
   }
 
   const handleQuickScan = () => {
-    setPorts(quickScanPorts.join(','))
+    setPortInput(quickScanPorts.join(','))
     startScan()
   }
 
   const handleFullScan = () => {
-    setPorts(fullScanPorts.join(','))
+    setPortInput(fullScanPorts.join(','))
     startScan()
   }
 
   const startScan = async () => {
-    if (!target || !ports) return
+    if (!target || !portInput || !parsedPorts || portValidationErrors.length > 0) return
 
     setIsScanning(true)
     setProgress(0)
@@ -128,26 +141,32 @@ function App() {
     setStartTime(new Date())
     setEndTime(null)
 
-    const portList = ports
-      .split(',')
-      .map(p => parseInt(p.trim()))
-      .filter(p => !isNaN(p))
-
     const request: ScanRequest = {
       target,
-      ports: portList,
+      ports: parsedPorts.expanded,
+      portInput,
+      portCount: parsedPorts.total,
       scanType,
       timeout,
       method: scanMethod
     }
 
     // Сохраняем настройки
-    await window.electronAPI.saveSettings({
+    const settings: Partial<AppSettings> = {
       target,
-      ports,
+      ports: portInput,
       timeout,
-      scanMethod
-    })
+      scanMethod,
+      defaultTimeout: timeout,
+      defaultMethod: scanMethod,
+      maxConcurrentConnections: 100,
+      theme: 'system',
+      autoSave: true,
+      recentTargets: [target],
+      recentPortInputs: [portInput]
+    }
+    
+    await window.electronAPI.saveSettings(settings as AppSettings)
 
     try {
       const scanResults = await window.electronAPI.startScan(request)
@@ -271,12 +290,12 @@ function App() {
                       Популярные
                     </Button>
                   </div>
-                  <Textarea
-                    id="ports"
-                    placeholder="22,80,443,3389 или 1-1000"
-                    value={ports}
-                    onChange={(e) => setPorts(e.target.value)}
-                    className="min-h-[100px] resize-none"
+                  <PortInput
+                    value={portInput}
+                    onChange={handlePortInputChange}
+                    onValidationChange={handlePortValidationChange}
+                    placeholder="22,80,443 или 22-443 или 22,80-90,443"
+                    disabled={isScanning}
                   />
                 </div>
 
@@ -314,7 +333,7 @@ function App() {
                 <div className="flex gap-2">
                   <Button
                     onClick={startScan}
-                    disabled={isScanning || !target || !ports}
+                    disabled={isScanning || !target || !portInput || !parsedPorts || portValidationErrors.length > 0}
                     className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
                   >
                     {isScanning ? (
