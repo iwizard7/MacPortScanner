@@ -12,6 +12,10 @@ on:
 env:
   NODE_VERSION: '18'
 
+permissions:
+  contents: write
+  actions: write
+
 jobs:
   auto-version:
     name: 📦 Auto Version Bump

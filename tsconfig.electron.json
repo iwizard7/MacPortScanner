@@ -1,19 +1,23 @@
 {
-  "extends": "./tsconfig.json",
   "compilerOptions": {
-    "module": "CommonJS",
     "target": "ES2020",
+    "module": "CommonJS",
     "outDir": "./build/dist",
-    "noEmit": false
+    "rootDir": "./src",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "noEmit": false,
+    "types": ["node", "electron"]
   },
   "include": [
     "src/main.ts",
     "src/preload.ts"
   ],
   "exclude": [
-    "src/App.tsx",
-    "src/components/**/*",
-    "src/main.tsx",
     "node_modules",
     "build",
     "dist"
