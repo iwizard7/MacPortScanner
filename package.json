@@ -87,7 +87,8 @@
       "darkModeSupport": true,
       "hardenedRuntime": false,
       "gatekeeperAssess": false,
-      "identity": null
+      "identity": null,
+      "type": "distribution"
     },
     "dmg": {
       "title": "MacPortScanner",
