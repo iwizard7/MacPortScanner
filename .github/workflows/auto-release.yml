@@ -1,0 +1,332 @@
+name: 🚀 Auto Version and Release
+
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - '**.md'
+      - '.gitignore'
+      - 'LICENSE'
+
+env:
+  NODE_VERSION: '18'
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  auto-version-and-release:
+    name: 🚀 Auto Version and Release
+    runs-on: macos-14
+    # Запускаем только если коммит не содержит [skip-version]
+    if: "!contains(github.event.head_commit.message, '[skip-version]')"
+    
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: 🖥️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 🔍 Analyze commit for version bump type
+        id: version_type
+        run: |
+          COMMIT_MSG="${{ github.event.head_commit.message }}"
+          echo "Analyzing commit: $COMMIT_MSG"
+          
+          # Определяем тип версионирования по коммиту
+          if echo "$COMMIT_MSG" | grep -qE "(BREAKING|💥|breaking)"; then
+            VERSION_TYPE="major"
+            echo "🔥 BREAKING CHANGE detected - major version bump"
+          elif echo "$COMMIT_MSG" | grep -qE "(feat|✨|feature|add)"; then
+            VERSION_TYPE="minor"
+            echo "✨ Feature detected - minor version bump"
+          elif echo "$COMMIT_MSG" | grep -qE "(fix|🐛|bug|patch)"; then
+            VERSION_TYPE="patch"
+            echo "🐛 Fix detected - patch version bump"
+          else
+            echo "📝 No version keywords found - skipping release"
+            exit 0
+          fi
+          
+          echo "VERSION_TYPE=$VERSION_TYPE" >> $GITHUB_OUTPUT
+
+      - name: 📦 Get current version
+        id: current_version
+        run: |
+          CURRENT_VERSION=$(grep '"version"' package.json | sed 's/.*"version": "\(.*\)".*/\1/')
+          echo "CURRENT_VERSION=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          echo "📋 Current version: $CURRENT_VERSION"
+
+      - name: 🔢 Calculate new version
+        id: new_version
+        run: |
+          CURRENT="${{ steps.current_version.outputs.CURRENT_VERSION }}"
+          TYPE="${{ steps.version_type.outputs.VERSION_TYPE }}"
+          
+          # Разбираем версию на части
+          IFS='.' read -ra VERSION_PARTS <<< "$CURRENT"
+          MAJOR=${VERSION_PARTS[0]}
+          MINOR=${VERSION_PARTS[1]}
+          PATCH=${VERSION_PARTS[2]}
+          
+          # Вычисляем новую версию
+          case $TYPE in
+            "major")
+              NEW_VERSION="$((MAJOR + 1)).0.0"
+              ;;
+            "minor")
+              NEW_VERSION="$MAJOR.$((MINOR + 1)).0"
+              ;;
+            "patch")
+              NEW_VERSION="$MAJOR.$MINOR.$((PATCH + 1))"
+              ;;
+          esac
+          
+          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "TAG_NAME=v$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "📦 New version: $CURRENT → $NEW_VERSION"
+
+      - name: ✏️ Update package.json
+        run: |
+          NEW_VERSION="${{ steps.new_version.outputs.NEW_VERSION }}"
+          CURRENT_VERSION="${{ steps.current_version.outputs.CURRENT_VERSION }}"
+          
+          # Обновляем package.json
+          sed -i "s/\"version\": \"$CURRENT_VERSION\"/\"version\": \"$NEW_VERSION\"/" package.json
+          
+          echo "✅ Updated package.json: $CURRENT_VERSION → $NEW_VERSION"
+
+      - name: 📚 Update CHANGELOG.md
+        run: |
+          NEW_VERSION="${{ steps.new_version.outputs.NEW_VERSION }}"
+          COMMIT_MSG="${{ github.event.head_commit.message }}"
+          DATE=$(date +"%Y-%m-%d")
+          
+          # Создаем новую запись для CHANGELOG
+          if [ -f "CHANGELOG.md" ]; then
+            # Создаем временный файл с новой записью
+            echo "" > /tmp/changelog_entry
+            echo "## [$NEW_VERSION] - $DATE" >> /tmp/changelog_entry
+            echo "" >> /tmp/changelog_entry
+            echo "### 🤖 Автоматическое обновление" >> /tmp/changelog_entry
+            echo "- $COMMIT_MSG" >> /tmp/changelog_entry
+            echo "" >> /tmp/changelog_entry
+            
+            # Вставляем новую запись в CHANGELOG.md
+            awk '
+            /^## \[/ && !inserted {
+                while ((getline line < "/tmp/changelog_entry") > 0) {
+                    print line
+                }
+                close("/tmp/changelog_entry")
+                inserted = 1
+            }
+            {print}
+            ' CHANGELOG.md > /tmp/changelog_new
+            mv /tmp/changelog_new CHANGELOG.md
+            
+            echo "✅ Updated CHANGELOG.md"
+          else
+            echo "⚠️ CHANGELOG.md not found, skipping"
+          fi
+
+      - name: 📦 Install dependencies
+        run: |
+          echo "📦 Installing dependencies..."
+          npm install
+
+      - name: ⚛️ Build React application
+        run: |
+          echo "⚛️ Building React application..."
+          npx vite build --outDir build/dist
+
+      - name: 🔨 Build Electron main process
+        run: |
+          echo "🔨 Compiling TypeScript for Electron..."
+          # Компилируем в отдельную папку, чтобы не перезаписать React build
+          mkdir -p build/electron
+          npx tsc -p tsconfig.electron.json
+          echo "📁 Checking compiled files..."
+          ls -la build/electron/ || echo "build/electron/ folder not found"
+          
+          # Копируем скомпилированные файлы в build/dist
+          if [ -f "build/electron/main.js" ]; then
+            echo "✅ main.js found at build/electron/main.js"
+            cp build/electron/main.js build/dist/main.js
+          else
+            echo "❌ main.js not found, checking structure:"
+            find build/electron -name "*.js" -type f
+            exit 1
+          fi
+          
+          if [ -f "build/electron/preload.js" ]; then
+            echo "✅ preload.js found at build/electron/preload.js"
+            cp build/electron/preload.js build/dist/preload.js
+          else
+            echo "❌ preload.js not found, checking structure:"
+            find build/electron -name "*.js" -type f
+            exit 1
+          fi
+
+      - name: 📁 Prepare files for electron-builder
+        run: |
+          echo "📁 Preparing files for electron-builder..."
+          cp -r build/dist ./dist
+          
+          # Проверяем что все файлы на месте
+          if [ ! -f "dist/main.js" ]; then
+            echo "❌ main.js not found"
+            exit 1
+          fi
+          if [ ! -f "dist/preload.js" ]; then
+            echo "❌ preload.js not found"
+            exit 1
+          fi
+          if [ ! -f "dist/index.html" ]; then
+            echo "❌ index.html not found"
+            exit 1
+          fi
+          echo "✅ All required files present"
+
+      - name: 🏗️ Build macOS applications
+        run: |
+          echo "🏗️ Building macOS applications with electron-builder..."
+          npx electron-builder --mac --publish never
+        env:
+          # Отключаем подписание для CI
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+
+      - name: 📊 Verify build artifacts
+        run: |
+          echo "📊 Checking build artifacts..."
+          if [ -d "build/release" ]; then
+            echo "✅ build/release/ found"
+            ls -la build/release/
+          else
+            echo "❌ build/release/ not found"
+            echo "📁 Checking all build directories:"
+            find . -name "*.dmg" -o -name "*.zip" 2>/dev/null || echo "No DMG/ZIP files found anywhere"
+            exit 1
+          fi
+          
+          # Проверяем размеры файлов
+          echo "🔍 Looking for DMG and ZIP files..."
+          DMG_COUNT=0
+          for file in build/release/*.dmg build/release/*.zip; do
+            if [ -f "$file" ]; then
+              size=$(du -h "$file" | cut -f1)
+              echo "📦 $(basename "$file"): $size"
+              DMG_COUNT=$((DMG_COUNT + 1))
+            fi
+          done
+          
+          if [ $DMG_COUNT -eq 0 ]; then
+            echo "❌ No DMG or ZIP files found for release!"
+            echo "📁 Contents of build/release/:"
+            ls -la build/release/
+            exit 1
+          else
+            echo "✅ Found $DMG_COUNT release files"
+          fi
+
+      - name: 🏷️ Create and push tag
+        run: |
+          NEW_VERSION="${{ steps.new_version.outputs.NEW_VERSION }}"
+          COMMIT_MSG="${{ github.event.head_commit.message }}"
+          
+          # Настраиваем git
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          # Коммитим изменения
+          git add package.json CHANGELOG.md
+          git commit -m "🤖 chore(release): bump version to $NEW_VERSION [skip-version]"
+          
+          # Создаем тег
+          git tag -a "v$NEW_VERSION" -m "Release v$NEW_VERSION"
+          
+          # Пушим изменения и тег
+          git push origin main
+          git push origin "v$NEW_VERSION"
+          
+          echo "✅ Created and pushed tag v$NEW_VERSION"
+
+      - name: 📝 Generate release notes
+        id: release_notes
+        run: |
+          NEW_VERSION="${{ steps.new_version.outputs.NEW_VERSION }}"
+          echo "📝 Generating release notes..."
+          
+          # Создаем release notes из CHANGELOG.md если он существует
+          if [ -f "CHANGELOG.md" ]; then
+            # Извлекаем секцию для текущей версии
+            RELEASE_NOTES=$(awk "
+              /^## \[$NEW_VERSION\]/ { found=1; next }
+              /^## \[/ && found { exit }
+              found && /^### / { 
+                gsub(/^### /, \"**\")
+                gsub(/$/, \"**\")
+                print
+                next
+              }
+              found && /^- / { print }
+              found && /^$/ { print }
+            " CHANGELOG.md)
+          fi
+          
+          # Если не нашли в CHANGELOG, создаем базовое описание
+          if [ -z "$RELEASE_NOTES" ]; then
+            echo "## MacPortScanner v$NEW_VERSION" > release_notes.md
+            echo "" >> release_notes.md
+            echo "🚀 Профессиональный сканер портов для macOS с оптимизацией для Apple Silicon" >> release_notes.md
+            echo "" >> release_notes.md
+            echo "### 📦 Файлы для скачивания" >> release_notes.md
+            echo "" >> release_notes.md
+            echo "- **MacPortScanner-$NEW_VERSION-arm64.dmg** - Для Apple Silicon (M1/M2/M3)" >> release_notes.md
+            echo "- **MacPortScanner-$NEW_VERSION.dmg** - Для Intel Mac" >> release_notes.md
+            echo "- **ZIP архивы** - Альтернативный формат установки" >> release_notes.md
+            echo "" >> release_notes.md
+            echo "### 🔧 Системные требования" >> release_notes.md
+            echo "" >> release_notes.md
+            echo "- macOS 10.15 (Catalina) или новее" >> release_notes.md
+            echo "- Рекомендуется: Apple Silicon для максимальной производительности" >> release_notes.md
+            echo "" >> release_notes.md
+            echo "### ⚠️ Первый запуск" >> release_notes.md
+            echo "" >> release_notes.md
+            echo "При первом запуске macOS может показать предупреждение о безопасности." >> release_notes.md
+            echo "**Решение:** Щелкните правой кнопкой по приложению → \"Открыть\" → \"Открыть\"" >> release_notes.md
+          else
+            echo "$RELEASE_NOTES" > release_notes.md
+          fi
+          
+          echo "✅ Release notes generated"
+
+      - name: 🚀 Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.new_version.outputs.TAG_NAME }}
+          name: MacPortScanner ${{ steps.new_version.outputs.TAG_NAME }}
+          body_path: release_notes.md
+          draft: false
+          prerelease: false
+          files: |
+            build/release/*.dmg
+            build/release/*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🎉 Summary
+        run: |
+          NEW_VERSION="${{ steps.new_version.outputs.NEW_VERSION }}"
+          echo "🎉 Version automatically bumped to $NEW_VERSION"
+          echo "🏷️ Tag v$NEW_VERSION created and pushed"
+          echo "📦 DMG and ZIP files built and uploaded"
+          echo "🔗 Release URL: https://github.com/${{ github.repository }}/releases/tag/v$NEW_VERSION"

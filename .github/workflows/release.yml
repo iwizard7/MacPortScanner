@@ -1,10 +1,8 @@
-name: 🚀 Build and Release MacPortScanner
+# ОТКЛЮЧЕН - заменен на auto-release.yml  
+name: 🚀 Build and Release MacPortScanner (DISABLED)
 
 on:
-  push:
-    tags:
-      - 'v*.*.*'  # Триггер на теги версий (v1.0.0, v1.2.3, etc.)
-  workflow_dispatch:
+  workflow_dispatch: # Только ручной запуск
     inputs:
       tag:
         description: 'Tag to release'
