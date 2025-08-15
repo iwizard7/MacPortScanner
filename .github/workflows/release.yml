@@ -107,31 +107,51 @@ jobs:
       - name: 🏗️ Build macOS applications
         run: |
           echo "🏗️ Building macOS applications with electron-builder..."
-          npx electron-builder --mac --publish never
+          echo "📁 Current directory structure:"
+          ls -la
+          echo "📁 dist/ contents:"
+          ls -la dist/
+          echo "🔧 Running electron-builder..."
+          npx electron-builder --mac --publish never --config.mac.target.0.arch=x64 --config.mac.target.1.arch=arm64
+          echo "📁 Checking build output:"
+          ls -la build/ || echo "No build/ directory"
+          ls -la build/release/ || echo "No build/release/ directory"
         env:
           # Отключаем подписание для CI
           CSC_IDENTITY_AUTO_DISCOVERY: false
+          DEBUG: electron-builder
 
       - name: 📊 Verify build artifacts
         run: |
           echo "📊 Checking build artifacts..."
-          ls -la build/release/ || echo "❌ build/release/ not found"
+          if [ -d "build/release" ]; then
+            echo "✅ build/release/ found"
+            ls -la build/release/
+          else
+            echo "❌ build/release/ not found"
+            echo "📁 Checking all build directories:"
+            find . -name "*.dmg" -o -name "*.zip" 2>/dev/null || echo "No DMG/ZIP files found anywhere"
+            exit 1
+          fi
           
           # Проверяем размеры файлов
           echo "🔍 Looking for DMG and ZIP files..."
-          find build/release -name "*.dmg" -o -name "*.zip" | while read file; do
+          DMG_COUNT=0
+          for file in build/release/*.dmg build/release/*.zip; do
             if [ -f "$file" ]; then
               size=$(du -h "$file" | cut -f1)
               echo "📦 $(basename "$file"): $size"
+              DMG_COUNT=$((DMG_COUNT + 1))
             fi
           done
           
-          # Проверяем что есть хотя бы один файл для релиза
-          if [ ! -f build/release/*.dmg ] && [ ! -f build/release/*.zip ]; then
+          if [ $DMG_COUNT -eq 0 ]; then
             echo "❌ No DMG or ZIP files found for release!"
             echo "📁 Contents of build/release/:"
             ls -la build/release/
             exit 1
+          else
+            echo "✅ Found $DMG_COUNT release files"
           fi
 
       - name: 📝 Generate release notes
