@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - 'v*.*.*'  # Триггер на теги версий (v1.0.0, v1.2.3, etc.)
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to release'
+        required: true
+        type: string
 
 env:
   NODE_VERSION: '18'
@@ -26,9 +32,15 @@ jobs:
       - name: 🏷️ Get version from tag
         id: version
         run: |
-          VERSION=${GITHUB_REF#refs/tags/v}
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG_NAME="${{ github.event.inputs.tag }}"
+            VERSION=${TAG_NAME#v}
+          else
+            VERSION=${GITHUB_REF#refs/tags/v}
+            TAG_NAME=${GITHUB_REF#refs/tags/}
+          fi
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-          echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          echo "TAG_NAME=$TAG_NAME" >> $GITHUB_OUTPUT
           echo "📦 Building version: $VERSION"
 
       - name: 🖥️ Setup Node.js

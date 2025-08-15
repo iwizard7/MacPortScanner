@@ -159,6 +159,18 @@ jobs:
           
           echo "✅ Created and pushed tag v$NEW_VERSION"
 
+      - name: 🚀 Trigger Release Build
+        run: |
+          NEW_VERSION="${{ steps.new_version.outputs.NEW_VERSION }}"
+          echo "🚀 Triggering release build for v$NEW_VERSION"
+          
+          # Создаем workflow dispatch event для запуска release
+          curl -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            https://api.github.com/repos/${{ github.repository }}/actions/workflows/release.yml/dispatches \
+            -d "{\"ref\":\"v$NEW_VERSION\"}"
+
       - name: 🎉 Summary
         run: |
           NEW_VERSION="${{ steps.new_version.outputs.NEW_VERSION }}"
