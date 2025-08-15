@@ -5,6 +5,18 @@
 Формат основан на [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 и этот проект придерживается [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+## [1.0.1] - 2025-08-15
+
+### 🤖 Автоматическое обновление
+- fix: Resolve ESLint config and TypeScript build issues
+
+- Simplify ESLint config to avoid missing @typescript-eslint/recommended
+- Fix tsconfig.electron.json to output files directly to build/dist
+- Add proper permissions to auto-version workflow
+- Temporarily disable ESLint in CI to focus on build issues
+- Set rootDir in TypeScript config to ensure proper file structure
+
 ## [1.0.0] - 2025-08-14
 
 ### Добавлено
