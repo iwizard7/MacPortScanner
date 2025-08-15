@@ -323,4 +323,4 @@ A: Да, приложение использует современные пра
 - [Руководство по релизам](RELEASE_GUIDE.md)
 - [GitHub Actions](.github/workflows/README.md)
 - [Примеры использования](EXAMPLES.md)
-- [Инструкции по установке](INSTALL.md)
+- [Инструкции по установке](INSTALL.md)# Test commit to trigger auto-version and release
