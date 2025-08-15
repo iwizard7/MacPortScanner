@@ -1,29 +1,8 @@
 import { contextBridge, ipcRenderer } from 'electron'
+import type { ScanRequest, ScanResult, SystemInfo, AppSettings } from './types'
 
-export interface ScanRequest {
-  target: string
-  ports: number[]
-  scanType: 'single' | 'range'
-  timeout?: number
-  method?: 'tcp' | 'syn' | 'udp'
-}
-
-export interface ScanResult {
-  ip: string
-  port: number
-  status: 'open' | 'closed' | 'filtered' | 'timeout'
-  service?: string
-  responseTime?: number
-  banner?: string
-}
-
-export interface SystemInfo {
-  platform: string
-  arch: string
-  cpuModel: string
-  totalMemory: number
-  networkInterfaces: any
-}
+// Реэкспортируем типы для использования в renderer процессе
+export type { ScanRequest, ScanResult, SystemInfo, AppSettings } from './types'
 
 // Expose protected methods that allow the renderer process to use
 // the ipcRenderer without exposing the entire object
@@ -36,7 +15,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getSystemInfo: () => ipcRenderer.invoke('get-system-info'),
   
   // Настройки
-  saveSettings: (settings: any) => ipcRenderer.invoke('save-settings', settings),
+  saveSettings: (settings: AppSettings) => ipcRenderer.invoke('save-settings', settings),
   loadSettings: () => ipcRenderer.invoke('load-settings'),
   
   // Экспорт
@@ -75,8 +54,8 @@ declare global {
       startScan: (request: ScanRequest) => Promise<ScanResult[]>
       stopScan: () => Promise<void>
       getSystemInfo: () => Promise<SystemInfo>
-      saveSettings: (settings: any) => Promise<void>
-      loadSettings: () => Promise<any>
+      saveSettings: (settings: AppSettings) => Promise<void>
+      loadSettings: () => Promise<AppSettings>
       exportResults: (results: ScanResult[]) => Promise<void>
       onScanProgress: (callback: (progress: number) => void) => void
       onQuickScan: (callback: () => void) => void

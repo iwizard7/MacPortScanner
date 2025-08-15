@@ -4,34 +4,10 @@ import { exec } from 'child_process'
 import { promisify } from 'util'
 import * as path from 'path'
 import Store from 'electron-store'
+import type { ScanRequest, ScanResult, SystemInfo, AppSettings, ScanProgress } from './types'
 
 const execAsync = promisify(exec)
 const store = new Store()
-
-interface ScanRequest {
-  target: string
-  ports: number[]
-  scanType: 'single' | 'range'
-  timeout?: number
-  method?: 'tcp' | 'syn' | 'udp'
-}
-
-interface ScanResult {
-  ip: string
-  port: number
-  status: 'open' | 'closed' | 'filtered' | 'timeout'
-  service?: string
-  responseTime?: number
-  banner?: string
-}
-
-interface SystemInfo {
-  platform: string
-  arch: string
-  cpuModel: string
-  totalMemory: number
-  networkInterfaces: any
-}
 
 const commonServices: Record<number, string> = {
   21: 'FTP',
