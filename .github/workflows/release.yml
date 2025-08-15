@@ -107,19 +107,10 @@ jobs:
       - name: 🏗️ Build macOS applications
         run: |
           echo "🏗️ Building macOS applications with electron-builder..."
-          echo "📁 Current directory structure:"
-          ls -la
-          echo "📁 dist/ contents:"
-          ls -la dist/
-          echo "🔧 Running electron-builder..."
           npx electron-builder --mac --publish never
-          echo "📁 Checking build output:"
-          ls -la build/ || echo "No build/ directory"
-          ls -la build/release/ || echo "No build/release/ directory"
         env:
           # Отключаем подписание для CI
           CSC_IDENTITY_AUTO_DISCOVERY: false
-          DEBUG: electron-builder
 
       - name: 📊 Verify build artifacts
         run: |
