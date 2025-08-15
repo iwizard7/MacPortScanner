@@ -112,7 +112,7 @@ jobs:
           echo "📁 dist/ contents:"
           ls -la dist/
           echo "🔧 Running electron-builder..."
-          npx electron-builder --mac --publish never --config.mac.target.0.arch=x64 --config.mac.target.1.arch=arm64
+          npx electron-builder --mac --publish never
           echo "📁 Checking build output:"
           ls -la build/ || echo "No build/ directory"
           ls -la build/release/ || echo "No build/release/ directory"

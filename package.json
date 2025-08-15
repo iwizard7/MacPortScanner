@@ -74,12 +74,7 @@
     ],
     "mac": {
       "category": "public.app-category.developer-tools",
-      "target": [
-        {
-          "target": "dmg",
-          "arch": "universal"
-        }
-      ],
+      "target": "dmg",
       "darkModeSupport": true,
       "hardenedRuntime": false,
       "gatekeeperAssess": false
