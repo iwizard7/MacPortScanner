@@ -10,16 +10,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './components/ui/tabs'
 import { Alert, AlertDescription } from './components/ui/alert'
 import { Separator } from './components/ui/separator'
 import { PortInput } from './components/ui/PortInput'
-import { 
-  Play, 
-  Square, 
-  Wifi, 
-  Shield, 
-  Clock, 
-  Target, 
-  Cpu, 
+import {
+  Play,
+  Square,
+  Wifi,
+  Shield,
+  Clock,
+  Target,
+  Cpu,
   HardDrive,
-  Network,
   Download,
   Settings,
   Zap
