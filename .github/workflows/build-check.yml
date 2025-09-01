@@ -32,6 +32,33 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
 
+      - name: 🔍 Verify package.json version
+        run: |
+          echo "🔍 Verifying package.json version..."
+          if [ ! -f "package.json" ]; then
+            echo "❌ package.json not found"
+            exit 1
+          fi
+
+          # Проверяем что версия указана
+          VERSION=$(grep '"version"' package.json | sed 's/.*"version": "\(.*\)".*/\1/' | tr -d '"' | tr -d ',')
+          if [ -z "$VERSION" ]; then
+            echo "❌ Version field is empty or not found in package.json"
+            echo "📄 Current package.json content:"
+            cat package.json
+            exit 1
+          fi
+
+          echo "✅ Version found: $VERSION"
+
+          # Проверяем формат версии (semver)
+          if ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "❌ Version format is invalid. Expected: x.y.z, Got: $VERSION"
+            exit 1
+          fi
+
+          echo "✅ Version format is valid"
+
       - name: 📦 Install dependencies
         run: |
           echo "📦 Installing dependencies..."
