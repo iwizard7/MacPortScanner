@@ -7,6 +7,21 @@ on:
       - '**.md'
       - '.gitignore'
       - 'LICENSE'
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: 'Type of version bump'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      custom_commit_message:
+        description: 'Custom commit message (optional)'
+        required: false
+        type: string
 
 env:
   NODE_VERSION: '18'
@@ -19,8 +34,8 @@ jobs:
   auto-version-and-release:
     name: 🚀 Auto Version and Release
     runs-on: macos-14
-    # Запускаем только если коммит не содержит [skip-version]
-    if: "!contains(github.event.head_commit.message, '[skip-version]')"
+    # Запускаем только если коммит не содержит [skip-version] (для push событий)
+    if: github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, '[skip-version]')
     
     steps:
       - name: 📥 Checkout repository
@@ -38,24 +53,30 @@ jobs:
       - name: 🔍 Analyze commit for version bump type
         id: version_type
         run: |
-          COMMIT_MSG="${{ github.event.head_commit.message }}"
-          echo "Analyzing commit: $COMMIT_MSG"
-          
-          # Определяем тип версионирования по коммиту
-          if echo "$COMMIT_MSG" | grep -qE "(BREAKING|💥|breaking)"; then
-            VERSION_TYPE="major"
-            echo "🔥 BREAKING CHANGE detected - major version bump"
-          elif echo "$COMMIT_MSG" | grep -qE "(feat|✨|feature|add)"; then
-            VERSION_TYPE="minor"
-            echo "✨ Feature detected - minor version bump"
-          elif echo "$COMMIT_MSG" | grep -qE "(fix|🐛|bug|patch)"; then
-            VERSION_TYPE="patch"
-            echo "🐛 Fix detected - patch version bump"
+          # Проверяем, запущен ли workflow вручную или автоматически
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION_TYPE="${{ inputs.version_type }}"
+            echo "🎯 Manual trigger detected - using version type: $VERSION_TYPE"
           else
-            echo "📝 No version keywords found - skipping release"
-            exit 0
+            COMMIT_MSG="${{ github.event.head_commit.message }}"
+            echo "Analyzing commit: $COMMIT_MSG"
+
+            # Определяем тип версионирования по коммиту
+            if echo "$COMMIT_MSG" | grep -qE "(BREAKING|💥|breaking)"; then
+              VERSION_TYPE="major"
+              echo "🔥 BREAKING CHANGE detected - major version bump"
+            elif echo "$COMMIT_MSG" | grep -qE "(feat|✨|feature|add)"; then
+              VERSION_TYPE="minor"
+              echo "✨ Feature detected - minor version bump"
+            elif echo "$COMMIT_MSG" | grep -qE "(fix|🐛|bug|patch)"; then
+              VERSION_TYPE="patch"
+              echo "🐛 Fix detected - patch version bump"
+            else
+              echo "📝 No version keywords found - skipping release"
+              exit 0
+            fi
           fi
-          
+
           echo "VERSION_TYPE=$VERSION_TYPE" >> $GITHUB_OUTPUT
 
       - name: 📦 Get current version
@@ -114,9 +135,19 @@ jobs:
       - name: 📚 Update CHANGELOG.md
         run: |
           NEW_VERSION="${{ steps.new_version.outputs.NEW_VERSION }}"
-          COMMIT_MSG="${{ github.event.head_commit.message }}"
           DATE=$(date +"%Y-%m-%d")
-          
+
+          # Определяем сообщение коммита
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            if [ -n "${{ inputs.custom_commit_message }}" ]; then
+              COMMIT_MSG="${{ inputs.custom_commit_message }}"
+            else
+              COMMIT_MSG="Manual release v$NEW_VERSION"
+            fi
+          else
+            COMMIT_MSG="${{ github.event.head_commit.message }}"
+          fi
+
           # Создаем новую запись для CHANGELOG
           if [ -f "CHANGELOG.md" ]; then
             # Создаем временный файл с новой записью
@@ -274,23 +305,33 @@ jobs:
       - name: 🏷️ Create and push tag
         run: |
           NEW_VERSION="${{ steps.new_version.outputs.NEW_VERSION }}"
-          COMMIT_MSG="${{ github.event.head_commit.message }}"
-          
+
+          # Определяем сообщение коммита для тега
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            if [ -n "${{ inputs.custom_commit_message }}" ]; then
+              COMMIT_MSG="${{ inputs.custom_commit_message }}"
+            else
+              COMMIT_MSG="Manual release v$NEW_VERSION"
+            fi
+          else
+            COMMIT_MSG="${{ github.event.head_commit.message }}"
+          fi
+
           # Настраиваем git
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          
+
           # Коммитим изменения
           git add package.json CHANGELOG.md
           git commit -m "🤖 chore(release): bump version to $NEW_VERSION [skip-version]"
-          
+
           # Создаем тег
-          git tag -a "v$NEW_VERSION" -m "Release v$NEW_VERSION"
-          
+          git tag -a "v$NEW_VERSION" -m "Release v$NEW_VERSION - $COMMIT_MSG"
+
           # Пушим изменения и тег
           git push origin main
           git push origin "v$NEW_VERSION"
-          
+
           echo "✅ Created and pushed tag v$NEW_VERSION"
 
       - name: 📝 Generate release notes
