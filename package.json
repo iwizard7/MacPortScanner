@@ -1,6 +1,6 @@
 {
   "name": "macportscanner",
-  "version": "1.4.5",
+  "version": "1.4.6",
   "description": "Нативный сканер портов для macOS с поддержкой Apple Silicon",
   "main": "dist/main.js",
   "scripts": {
@@ -89,28 +89,34 @@
       "!node_modules/.cache"
     ],
     "mac": {
-       "category": "public.app-category.developer-tools",
-       "icon": "ico/MacPortScanner.icns",
-       "target": [
-         {
-           "target": "dmg",
-           "arch": ["arm64", "x64"]
-         },
-         {
-           "target": "zip",
-           "arch": ["arm64", "x64"]
-         }
-       ],
-       "darkModeSupport": true,
-       "hardenedRuntime": false,
-       "gatekeeperAssess": true,
-       "entitlements": "build/entitlements.mac.plist",
-       "entitlementsInherit": "build/entitlements.mac.plist",
-       "type": "development",
-       "extendInfo": {
-         "LSUIElement": false
-       }
-     },
+      "category": "public.app-category.developer-tools",
+      "icon": "ico/MacPortScanner.icns",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ],
+      "darkModeSupport": true,
+      "hardenedRuntime": false,
+      "gatekeeperAssess": true,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist",
+      "type": "development",
+      "extendInfo": {
+        "LSUIElement": false
+      }
+    },
     "dmg": {
       "title": "MacPortScanner",
       "window": {
