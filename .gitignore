@@ -82,3 +82,7 @@ coverage/
 
 # Development scripts (not for repository)
 .dev-scripts/
+
+# Generated icon files (keep only SVG source)
+ico/*.png
+ico/*.iconset/

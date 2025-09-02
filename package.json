@@ -83,7 +83,7 @@
     ],
     "mac": {
       "category": "public.app-category.developer-tools",
-      "icon": "ico/MacPortScanner_1024.svg",
+      "icon": "ico/MacPortScanner.icns",
       "target": [
         {
           "target": "dmg",
