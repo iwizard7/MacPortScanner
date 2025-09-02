@@ -13,6 +13,7 @@
     "build:mac": "npm run build && electron-builder --mac",
     "build:mac-arm64": "npm run build && electron-builder --mac --arm64",
     "build:mac-universal": "npm run build && electron-builder --mac --universal",
+    "build:mac-local": "npm run build && CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --mac --publish never",
     "preview": "vite preview",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "type-check": "tsc --noEmit",
@@ -82,28 +83,28 @@
       "!node_modules/.cache"
     ],
     "mac": {
-      "category": "public.app-category.developer-tools",
-      "icon": "ico/MacPortScanner.icns",
-      "target": [
-        {
-          "target": "dmg",
-          "arch": ["arm64", "x64"]
-        },
-        {
-          "target": "zip",
-          "arch": ["arm64", "x64"]
-        }
-      ],
-      "darkModeSupport": true,
-      "hardenedRuntime": true,
-      "gatekeeperAssess": false,
-      "entitlements": "build/entitlements.mac.plist",
-      "entitlementsInherit": "build/entitlements.mac.plist",
-      "type": "distribution",
-      "extendInfo": {
-        "LSUIElement": false
-      }
-    },
+       "category": "public.app-category.developer-tools",
+       "icon": "ico/MacPortScanner.icns",
+       "target": [
+         {
+           "target": "dmg",
+           "arch": ["arm64", "x64"]
+         },
+         {
+           "target": "zip",
+           "arch": ["arm64", "x64"]
+         }
+       ],
+       "darkModeSupport": true,
+       "hardenedRuntime": false,
+       "gatekeeperAssess": true,
+       "entitlements": "build/entitlements.mac.plist",
+       "entitlementsInherit": "build/entitlements.mac.plist",
+       "type": "development",
+       "extendInfo": {
+         "LSUIElement": false
+       }
+     },
     "dmg": {
       "title": "MacPortScanner",
       "window": {

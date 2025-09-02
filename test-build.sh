@@ -29,7 +29,7 @@ echo "📁 Подготавливаем файлы..."
 cp -r build/dist ./dist
 
 echo "🏗️ Собираем macOS приложение..."
-npx electron-builder --mac --publish never
+npm run build:mac-local
 
 echo "✅ Сборка завершена!"
 echo "📂 Проверьте папку build/release/"
