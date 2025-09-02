@@ -1,6 +1,6 @@
 {
   "name": "macportscanner",
-  "version": "1.4.4",
+  "version": "1.4.5",
   "description": "Нативный сканер портов для macOS с поддержкой Apple Silicon",
   "main": "dist/main.js",
   "scripts": {
@@ -19,7 +19,13 @@
     "test": "jest",
     "test:watch": "jest --watch"
   },
-  "keywords": ["port-scanner", "macos", "apple-silicon", "network", "security"],
+  "keywords": [
+    "port-scanner",
+    "macos",
+    "apple-silicon",
+    "network",
+    "security"
+  ],
   "author": "Mac Port Scanner Team",
   "license": "MIT",
   "dependencies": {
@@ -87,11 +93,17 @@
       "target": [
         {
           "target": "dmg",
-          "arch": ["arm64", "x64"]
+          "arch": [
+            "arm64",
+            "x64"
+          ]
         },
         {
           "target": "zip",
-          "arch": ["arm64", "x64"]
+          "arch": [
+            "arm64",
+            "x64"
+          ]
         }
       ],
       "darkModeSupport": true,
