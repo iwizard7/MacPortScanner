@@ -266,10 +266,9 @@ jobs:
           echo "🏗️ Building macOS applications with electron-builder..."
           npx electron-builder --mac --publish never
         env:
-          # Отключаем подписание для CI (нет сертификатов разработчика)
+          # Используем ad-hoc подпись для совместимости с Gatekeeper
           CSC_IDENTITY_AUTO_DISCOVERY: false
-          CSC_LINK: ""
-          CSC_KEY_PASSWORD: ""
+          CSC_IDENTITY: "-"
 
       - name: 📊 Verify build artifacts
         run: |
