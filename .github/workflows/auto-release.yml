@@ -82,7 +82,13 @@ jobs:
       - name: 📦 Get current version
         id: current_version
         run: |
-          CURRENT_VERSION=$(grep '"version"' package.json | sed 's/.*"version": "\(.*\)".*/\1/')
+          # Извлекаем версию более надежно
+          CURRENT_VERSION=$(node -p "require('./package.json').version" 2>/dev/null || echo "")
+          if [ -z "$CURRENT_VERSION" ]; then
+            # Если версия пустая, устанавливаем дефолтную
+            CURRENT_VERSION="1.4.3"
+            echo "⚠️ Version was empty, setting to default: $CURRENT_VERSION"
+          fi
           echo "CURRENT_VERSION=$CURRENT_VERSION" >> $GITHUB_OUTPUT
           echo "📋 Current version: $CURRENT_VERSION"
 
@@ -119,14 +125,20 @@ jobs:
         run: |
           NEW_VERSION="${{ steps.new_version.outputs.NEW_VERSION }}"
           CURRENT_VERSION="${{ steps.current_version.outputs.CURRENT_VERSION }}"
-          
-          # Обновляем package.json используя более безопасный способ
-          sed -i '' "s/\"version\": \"$CURRENT_VERSION\"/\"version\": \"$NEW_VERSION\"/" package.json
-          
+
+          # Обновляем package.json используя Node.js для надежности
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            pkg.version = '$NEW_VERSION';
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+            console.log('✅ Updated package.json: $CURRENT_VERSION → $NEW_VERSION');
+          "
+
           # Проверяем что обновление прошло успешно
-          UPDATED_VERSION=$(grep '"version"' package.json | sed 's/.*"version": "\(.*\)".*/\1/')
+          UPDATED_VERSION=$(node -p "require('./package.json').version" 2>/dev/null || echo "")
           if [ "$UPDATED_VERSION" = "$NEW_VERSION" ]; then
-            echo "✅ Updated package.json: $CURRENT_VERSION → $NEW_VERSION"
+            echo "✅ Verified package.json version: $NEW_VERSION"
           else
             echo "❌ Failed to update package.json. Current: $UPDATED_VERSION, Expected: $NEW_VERSION"
             exit 1
@@ -184,8 +196,8 @@ jobs:
             exit 1
           fi
 
-          # Проверяем что версия указана
-          VERSION=$(grep '"version"' package.json | sed 's/.*"version": "\(.*\)".*/\1/' | tr -d '"' | tr -d ',')
+          # Проверяем версию используя Node.js
+          VERSION=$(node -p "require('./package.json').version" 2>/dev/null || echo "")
           if [ -z "$VERSION" ]; then
             echo "❌ Version field is empty or not found in package.json"
             echo "📄 Current package.json content:"
