@@ -95,7 +95,7 @@
         }
       ],
       "darkModeSupport": true,
-      "hardenedRuntime": false,
+      "hardenedRuntime": true,
       "gatekeeperAssess": false,
       "identity": null,
       "type": "distribution",
