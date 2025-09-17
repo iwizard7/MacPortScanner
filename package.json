@@ -119,6 +119,7 @@
     },
     "dmg": {
       "title": "MacPortScanner",
+      "background": null,
       "window": {
         "width": 540,
         "height": 380
