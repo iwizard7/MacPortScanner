@@ -329,6 +329,14 @@ export class PortScanner {
   }
 
   async performScan(request: ScanRequest, progressCallback: (progress: number) => void): Promise<ScanResult[]> {
+    console.log('🔍 performScan called with request:', {
+      target: request.target,
+      portsCount: request.ports?.length || 0,
+      scanType: request.scanType,
+      timeout: request.timeout,
+      method: request.method
+    })
+
     // Для тестирования используем простую реализацию
     if (process.env.NODE_ENV === 'test') {
       return this.performScanSimple(request, progressCallback)
@@ -340,6 +348,9 @@ export class PortScanner {
 
     const { target, ports, scanType, timeout = 3000, method = 'tcp' } = request
     const targets = scanType === 'single' ? [target] : this.generateIPRange(target)
+
+    console.log('🎯 Generated targets:', targets)
+    console.log('🔢 Ports to scan:', ports?.slice(0, 10), ports?.length > 10 ? `... and ${ports.length - 10} more` : '')
 
     const totalScans = targets.length * ports.length
 
@@ -361,14 +372,19 @@ export class PortScanner {
         if (!this.isScanning) return []
 
         const ipResults: ScanResult[] = []
+        console.log(`📍 Processing IP: ${ip}`)
 
         // Разбиваем порты на группы для равномерного распределения
         const portGroups = this.createPortGroups(ports, Math.ceil(ports.length / optimalConcurrency))
+        console.log(`📦 Created ${portGroups.length} port groups for IP ${ip}`)
 
         // Создаем задачи для каждой группы портов
         const portGroupTasks = portGroups.map(portGroup => async (): Promise<ScanResult[]> => {
           if (!this.isScanning) return []
-          return await this.scanPortGroup(ip, portGroup, timeout)
+          console.log(`🔍 Scanning port group: ${portGroup.slice(0, 3).join(',')}... (${portGroup.length} ports)`)
+          const groupResult = await this.scanPortGroup(ip, portGroup, timeout)
+          console.log(`✅ Port group completed: ${groupResult.length} results`)
+          return groupResult
         })
 
         // Выполняем группы портов для этого IP с контролем параллелизма
@@ -388,6 +404,7 @@ export class PortScanner {
           ipResults.push(...groupResult)
         }
 
+        console.log(`📊 IP ${ip} completed: ${ipResults.length} results`)
         return ipResults
       })
 
@@ -409,6 +426,8 @@ export class PortScanner {
         // Обновляем метрики после каждого IP
         this.updateMetrics(ipResult)
       }
+
+      console.log(`📈 Total results collected: ${results.length}`)
 
     } catch (error) {
       console.error('Scan error:', error)
@@ -625,6 +644,7 @@ export class PortScanner {
     this.activeWorkers++
 
     try {
+      console.log(`🔄 Starting port group scan: ${ports.length} ports for ${host}`)
       // Используем Promise.allSettled для лучшей обработки ошибок
       const promises = ports.map(port => this.scanPort(host, port, timeout))
       const results = await Promise.allSettled(promises)
@@ -636,6 +656,7 @@ export class PortScanner {
           scanResults.push(result.value)
         } else {
           // В случае ошибки создаем результат с ошибкой
+          console.warn(`⚠️ Port scan failed for ${host}:${ports[index]}:`, result.reason)
           scanResults.push({
             ip: host,
             port: ports[index],
@@ -646,6 +667,7 @@ export class PortScanner {
         }
       })
 
+      console.log(`✅ Port group scan completed: ${scanResults.length}/${ports.length} results for ${host}`)
       return scanResults
     } finally {
       this.activeWorkers--

@@ -233,12 +233,15 @@ function App() {
     await window.electronAPI.saveSettings(settings as AppSettings)
 
     try {
+      console.log('🚀 Starting scan with request:', request)
       const scanResults = await window.electronAPI.startScan(request)
+      console.log('📊 Scan results received:', scanResults?.length || 0, 'results')
       setResults(scanResults)
       setEndTime(new Date())
 
       // Получаем метрики производительности
       const metrics = await window.electronAPI.getScanMetrics()
+      console.log('📈 Scan metrics received:', metrics)
       setScanMetrics(metrics)
     } catch (error) {
       console.error('Scan failed:', error)
