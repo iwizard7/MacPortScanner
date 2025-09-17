@@ -683,39 +683,48 @@ export class PortScanner {
     onProgress?: (completed: number, total: number) => void
   ): Promise<T[]> {
     const results: T[] = []
-    const executing: Promise<void>[] = []
     let completed = 0
+    let index = 0
 
-    for (const task of tasks) {
-      if (executing.length >= maxConcurrent) {
-        // Ждем завершения одного из активных задач
-        await Promise.race(executing)
-      }
+    // Функция для выполнения следующей задачи
+    const executeNext = async (): Promise<void> => {
+      if (index >= tasks.length) return
 
-      const promise = (async () => {
-        try {
-          const result = await task()
-          results.push(result)
-          completed++
+      const currentIndex = index++
+      const task = tasks[currentIndex]
 
-          if (onProgress) {
-            onProgress(completed, tasks.length)
-          }
-        } catch (error) {
-          console.error('Task execution error:', error)
-          completed++
+      try {
+        const result = await task()
+        results[currentIndex] = result
+        completed++
+
+        if (onProgress) {
+          onProgress(completed, tasks.length)
         }
-      })()
-
-      executing.push(promise)
-
-      // Удаляем завершенные задачи из массива executing
-      executing.splice(executing.findIndex(p => p === promise), 1)
+      } catch (error) {
+        console.error('Task execution error:', error)
+        completed++
+      }
     }
 
-    // Ждем завершения всех оставшихся задач
-    await Promise.all(executing)
+    // Запускаем начальный набор задач
+    const initialPromises: Promise<void>[] = []
+    for (let i = 0; i < Math.min(maxConcurrent, tasks.length); i++) {
+      initialPromises.push(executeNext())
+    }
 
-    return results
+    // Ждем завершения начальных задач и запускаем следующие
+    while (completed < tasks.length) {
+      await Promise.race(initialPromises.filter(p => p !== undefined))
+      // Запускаем следующую задачу, если есть место
+      if (index < tasks.length && initialPromises.length < maxConcurrent) {
+        initialPromises.push(executeNext())
+      }
+    }
+
+    // Ждем завершения всех задач
+    await Promise.all(initialPromises)
+
+    return results.filter(result => result !== undefined)
   }
 }
