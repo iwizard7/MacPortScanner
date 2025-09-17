@@ -555,7 +555,7 @@ function App() {
                             </div>
                           </div>
                         </div>
-                        <div className="mt-3 grid grid-cols-3 gap-4 text-sm">
+                        <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                           <div>
                             <div className="text-muted-foreground">Всего портов</div>
                             <div className="font-medium">{scanMetrics.totalPorts}</div>
@@ -568,7 +568,16 @@ function App() {
                             <div className="text-muted-foreground">Закрытых</div>
                             <div className="font-medium text-gray-600">{scanMetrics.closedPorts}</div>
                           </div>
+                          <div>
+                            <div className="text-muted-foreground">Макс. потоков</div>
+                            <div className="font-medium text-blue-600">{scanMetrics.maxConcurrentWorkers || 'N/A'}</div>
+                          </div>
                         </div>
+                        {scanMetrics.averageActiveWorkers && (
+                          <div className="mt-2 text-xs text-muted-foreground">
+                            Среднее активных потоков: {scanMetrics.averageActiveWorkers.toFixed(1)}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

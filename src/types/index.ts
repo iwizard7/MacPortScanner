@@ -53,6 +53,8 @@ export interface ScanMetrics {
   averageResponseTime?: number;
   peakMemoryUsage?: number;
   totalMemoryUsage?: number;
+  maxConcurrentWorkers?: number;
+  averageActiveWorkers?: number;
 }
 
 export interface AppSettings {
