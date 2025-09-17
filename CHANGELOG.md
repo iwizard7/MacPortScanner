@@ -9,6 +9,20 @@
 
 
 
+
+## [1.6.4] - 2025-09-17
+
+### 🤖 Автоматическое обновление
+- 🐛 fix: remove problematic multithreading implementation
+
+- Remove complex multithreading logic that was causing scan interruptions
+- Return to simple sequential port scanning for reliability
+- Fix port counting logic and metrics display
+- Clean up unused methods and properties
+- Add try-catch blocks for IPC handler registration
+- Update version to 1.6.3
+- Update documentation and changelog
+
 ## [1.6.3] - 2025-09-17
 
 ### 🐛 Исправлено
