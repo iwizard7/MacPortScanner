@@ -23,7 +23,7 @@ import {
   Settings,
   Zap
 } from 'lucide-react'
-import type { ScanRequest, ScanResult, SystemInfo, AppSettings, ParsedPorts } from './types'
+import type { ScanRequest, ScanResult, SystemInfo, AppSettings, ParsedPorts, ScanMetrics } from './types'
 
 function App() {
   const [target, setTarget] = useState('127.0.0.1')
@@ -39,6 +39,7 @@ function App() {
   const [scanMethod, setScanMethod] = useState<'tcp' | 'syn' | 'udp'>('tcp')
   const [timeout, setTimeout] = useState(3000)
   const [portValidationErrors, setPortValidationErrors] = useState<string[]>([])
+  const [scanMetrics, setScanMetrics] = useState<ScanMetrics | null>(null)
 
   // Состояние для фильтров и поиска
   const [searchText, setSearchText] = useState('')
@@ -235,6 +236,10 @@ function App() {
       const scanResults = await window.electronAPI.startScan(request)
       setResults(scanResults)
       setEndTime(new Date())
+
+      // Получаем метрики производительности
+      const metrics = await window.electronAPI.getScanMetrics()
+      setScanMetrics(metrics)
     } catch (error) {
       console.error('Scan failed:', error)
     } finally {
@@ -484,20 +489,10 @@ function App() {
                         </>
                       )}
                     </CardDescription>
-                  </div>
 
-                  <div className="flex items-center gap-2">
+                    {/* Действия и статистика */}
                     {results.length > 0 && (
-                      <>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={handleExportResults}
-                          className="text-xs"
-                        >
-                          <Download className="h-3 w-3 mr-1" />
-                          Экспорт
-                        </Button>
+                      <div className="mt-4 flex items-center justify-between">
                         <div className="flex gap-2">
                           <Badge variant="default" className="bg-green-500">
                             Открыто: {openResults.length}
@@ -515,8 +510,71 @@ function App() {
                             </Badge>
                           )}
                         </div>
-                      </>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleExportResults}
+                          className="text-xs"
+                        >
+                          <Download className="h-3 w-3 mr-1" />
+                          Экспорт
+                        </Button>
+                      </div>
                     )}
+
+                    {/* Метрики производительности */}
+                    {scanMetrics && (
+                      <div className="mt-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border">
+                        <h4 className="font-semibold text-sm mb-3 flex items-center gap-2">
+                          <Zap className="h-4 w-4" />
+                          Метрики производительности
+                        </h4>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          <div>
+                            <div className="text-muted-foreground">Длительность</div>
+                            <div className="font-medium">
+                              {scanMetrics.duration ? `${(scanMetrics.duration / 1000).toFixed(1)}с` : 'N/A'}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-muted-foreground">Скорость</div>
+                            <div className="font-medium">
+                              {scanMetrics.scanSpeed ? `${scanMetrics.scanSpeed.toFixed(1)} п/с` : 'N/A'}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-muted-foreground">Средний ответ</div>
+                            <div className="font-medium">
+                              {scanMetrics.averageResponseTime ? `${scanMetrics.averageResponseTime.toFixed(0)}мс` : 'N/A'}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-muted-foreground">Память (макс)</div>
+                            <div className="font-medium">
+                              {scanMetrics.peakMemoryUsage ? `${(scanMetrics.peakMemoryUsage / 1024 / 1024).toFixed(1)} MB` : 'N/A'}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="mt-3 grid grid-cols-3 gap-4 text-sm">
+                          <div>
+                            <div className="text-muted-foreground">Всего портов</div>
+                            <div className="font-medium">{scanMetrics.totalPorts}</div>
+                          </div>
+                          <div>
+                            <div className="text-muted-foreground">Открытых</div>
+                            <div className="font-medium text-green-600">{scanMetrics.openPorts}</div>
+                          </div>
+                          <div>
+                            <div className="text-muted-foreground">Закрытых</div>
+                            <div className="font-medium text-gray-600">{scanMetrics.closedPorts}</div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    {/* Этот блок теперь пустой, так как элементы перемещены выше */}
                   </div>
                 </div>
               </CardHeader>

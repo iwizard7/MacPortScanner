@@ -5,7 +5,7 @@
 import { createConnection, Socket } from 'net'
 import { exec } from 'child_process'
 import { promisify } from 'util'
-import type { ScanResult, ScanRequest } from '../types'
+import type { ScanResult, ScanRequest, ScanMetrics } from '../types'
 
 const execAsync = promisify(exec)
 
@@ -62,6 +62,7 @@ const commonServices: Record<number, string> = {
 export class PortScanner {
   private isScanning = false
   private scanResults: ScanResult[] = []
+  private scanMetrics: ScanMetrics | null = null
 
   async getServiceBanner(host: string, port: number, timeout = 5000): Promise<{ banner: string; service: string }> {
     return new Promise((resolve) => {
@@ -334,6 +335,9 @@ export class PortScanner {
     const totalScans = targets.length * ports.length
     let completed = 0
 
+    // Инициализируем метрики
+    this.initializeMetrics(totalScans)
+
     // Оптимизация для Apple Silicon - увеличиваем параллелизм
     const maxConcurrent = process.arch === 'arm64' ? 100 : 50
     const results: ScanResult[] = []
@@ -354,12 +358,20 @@ export class PortScanner {
 
         results.push(...chunkResults)
         completed += chunk.length
+
+        // Обновляем метрики после каждого чанка
+        this.updateMetrics(chunkResults)
+
         progressCallback((completed / totalScans) * 100)
       }
     }
 
     this.isScanning = false
     this.scanResults = results
+
+    // Финализируем метрики
+    this.finalizeMetrics()
+
     return results
   }
 
@@ -369,5 +381,70 @@ export class PortScanner {
 
   getResults(): ScanResult[] {
     return this.scanResults
+  }
+
+  getMetrics(): ScanMetrics | null {
+    return this.scanMetrics
+  }
+
+  private initializeMetrics(totalPorts: number): void {
+    this.scanMetrics = {
+      startTime: Date.now(),
+      totalPorts,
+      scannedPorts: 0,
+      openPorts: 0,
+      closedPorts: 0,
+      timeoutPorts: 0,
+      peakMemoryUsage: 0,
+      totalMemoryUsage: 0
+    }
+  }
+
+  private updateMetrics(results: ScanResult[]): void {
+    if (!this.scanMetrics) return
+
+    this.scanMetrics.scannedPorts += results.length
+
+    results.forEach(result => {
+      switch (result.status) {
+        case 'open':
+          this.scanMetrics!.openPorts++
+          break
+        case 'closed':
+          this.scanMetrics!.closedPorts++
+          break
+        case 'timeout':
+          this.scanMetrics!.timeoutPorts++
+          break
+      }
+    })
+
+    // Обновляем использование памяти
+    const memUsage = process.memoryUsage()
+    const currentUsage = memUsage.heapUsed
+    this.scanMetrics.totalMemoryUsage = currentUsage
+    if (currentUsage > this.scanMetrics.peakMemoryUsage!) {
+      this.scanMetrics.peakMemoryUsage = currentUsage
+    }
+  }
+
+  private finalizeMetrics(): void {
+    if (!this.scanMetrics) return
+
+    this.scanMetrics.endTime = Date.now()
+    this.scanMetrics.duration = this.scanMetrics.endTime - this.scanMetrics.startTime
+
+    if (this.scanMetrics.duration > 0) {
+      this.scanMetrics.scanSpeed = this.scanMetrics.scannedPorts / (this.scanMetrics.duration / 1000)
+    }
+
+    // Рассчитываем среднее время ответа
+    const responseTimes = this.scanResults
+      .filter(result => result.responseTime !== undefined && result.responseTime > 0)
+      .map(result => result.responseTime!)
+
+    if (responseTimes.length > 0) {
+      this.scanMetrics.averageResponseTime = responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length
+    }
   }
 }

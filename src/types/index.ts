@@ -40,6 +40,21 @@ export interface ScanProgress {
   currentIP?: string;
 }
 
+export interface ScanMetrics {
+  startTime: number;
+  endTime?: number;
+  duration?: number;
+  totalPorts: number;
+  scannedPorts: number;
+  openPorts: number;
+  closedPorts: number;
+  timeoutPorts: number;
+  scanSpeed?: number; // портов в секунду
+  averageResponseTime?: number;
+  peakMemoryUsage?: number;
+  totalMemoryUsage?: number;
+}
+
 export interface AppSettings {
   // Настройки сканирования
   target?: string;

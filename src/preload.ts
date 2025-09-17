@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import type { ScanRequest, ScanResult, SystemInfo, AppSettings } from './types'
+import type { ScanRequest, ScanResult, SystemInfo, AppSettings, ScanMetrics } from './types'
 
 // Реэкспортируем типы для использования в renderer процессе
 export type { ScanRequest, ScanResult, SystemInfo, AppSettings } from './types'
@@ -20,6 +20,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   
   // Экспорт
   exportResults: (results: ScanResult[]) => ipcRenderer.invoke('export-results', results),
+
+  // Метрики производительности
+  getScanMetrics: () => ipcRenderer.invoke('get-scan-metrics'),
   
   // События
   onScanProgress: (callback: (progress: number) => void) => {
@@ -57,6 +60,7 @@ declare global {
       saveSettings: (settings: AppSettings) => Promise<void>
       loadSettings: () => Promise<AppSettings>
       exportResults: (results: ScanResult[]) => Promise<void>
+      getScanMetrics: () => Promise<ScanMetrics | null>
       onScanProgress: (callback: (progress: number) => void) => void
       onQuickScan: (callback: () => void) => void
       onFullScan: (callback: () => void) => void

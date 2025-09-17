@@ -158,6 +158,10 @@ ipcMain.handle('stop-scan', () => {
   scanner.stopScan()
 })
 
+ipcMain.handle('get-scan-metrics', () => {
+  return scanner.getMetrics()
+})
+
 ipcMain.handle('get-system-info', async (): Promise<SystemInfo> => {
   const os = require('os')
   return {
