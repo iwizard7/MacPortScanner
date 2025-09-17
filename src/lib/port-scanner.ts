@@ -10,24 +10,53 @@ import type { ScanResult, ScanRequest } from '../types'
 const execAsync = promisify(exec)
 
 const commonServices: Record<number, string> = {
+  20: 'FTP Data',
   21: 'FTP',
   22: 'SSH',
   23: 'Telnet',
   25: 'SMTP',
   53: 'DNS',
+  67: 'DHCP',
+  68: 'DHCP',
+  69: 'TFTP',
   80: 'HTTP',
   110: 'POP3',
+  119: 'NNTP',
+  123: 'NTP',
+  139: 'NetBIOS',
   143: 'IMAP',
+  161: 'SNMP',
+  194: 'IRC',
+  389: 'LDAP',
   443: 'HTTPS',
+  445: 'SMB',
+  465: 'SMTPS',
+  587: 'SMTP Submission',
+  636: 'LDAPS',
   993: 'IMAPS',
   995: 'POP3S',
+  1080: 'SOCKS',
   1433: 'MSSQL',
+  3128: 'HTTP Proxy',
   3306: 'MySQL',
   3389: 'RDP',
+  4000: 'HTTP',
+  5000: 'HTTP (Flask/Python)',
+  5222: 'XMPP',
   5432: 'PostgreSQL',
   5900: 'VNC',
+  5959: 'VNC (alternative)',
   6379: 'Redis',
+  6667: 'IRC',
+  7000: 'HTTP (various)',
+  8000: 'HTTP',
+  8080: 'HTTP Proxy',
+  8443: 'HTTPS Alt',
+  8888: 'HTTP Alt',
+  9000: 'HTTP',
   27017: 'MongoDB',
+  27018: 'MongoDB Shard',
+  27019: 'MongoDB Config',
 }
 
 export class PortScanner {
@@ -98,7 +127,8 @@ export class PortScanner {
             // MongoDB
             break // MongoDB handshake происходит автоматически
           default:
-            // Для неизвестных портов просто ждем данные
+            // Для неизвестных портов пробуем HTTP GET
+            socket.write('GET / HTTP/1.1\r\nHost: ' + host + '\r\nConnection: close\r\n\r\n')
             break
         }
       })
