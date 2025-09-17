@@ -82,12 +82,12 @@ jobs:
       - name: 📦 Get current version
         id: current_version
         run: |
-          # Извлекаем версию используя grep для надежности
-          CURRENT_VERSION=$(grep '"version"' package.json | sed 's/.*"version": "\(.*\)".*/\1/')
-          if [ -z "$CURRENT_VERSION" ]; then
-            # Если версия пустая, устанавливаем дефолтную
+          # Извлекаем версию используя Node.js для надежности
+          CURRENT_VERSION=$(node -p "require('./package.json').version || '1.4.3'")
+          if [ -z "$CURRENT_VERSION" ] || [ "$CURRENT_VERSION" = "undefined" ]; then
+            # Если версия пустая или undefined, устанавливаем дефолтную
             CURRENT_VERSION="1.4.3"
-            echo "⚠️ Version was empty, setting to default: $CURRENT_VERSION"
+            echo "⚠️ Version was empty or undefined, setting to default: $CURRENT_VERSION"
           fi
           echo "CURRENT_VERSION=$CURRENT_VERSION" >> $GITHUB_OUTPUT
           echo "📋 Current version: $CURRENT_VERSION"
@@ -136,7 +136,7 @@ jobs:
           "
 
           # Проверяем что обновление прошло успешно
-          UPDATED_VERSION=$(grep '"version"' package.json | sed 's/.*"version": "\(.*\)".*/\1/')
+          UPDATED_VERSION=$(node -p "require('./package.json').version || ''")
           if [ "$UPDATED_VERSION" = "$NEW_VERSION" ]; then
             echo "✅ Verified package.json version: $NEW_VERSION"
           else
@@ -196,9 +196,9 @@ jobs:
             exit 1
           fi
 
-          # Проверяем версию используя grep
-          VERSION=$(grep '"version"' package.json | sed 's/.*"version": "\(.*\)".*/\1/')
-          if [ -z "$VERSION" ]; then
+          # Проверяем версию используя Node.js
+          VERSION=$(node -p "require('./package.json').version || ''")
+          if [ -z "$VERSION" ] || [ "$VERSION" = "undefined" ]; then
             echo "❌ Version field is empty or not found in package.json"
             echo "📄 Current package.json content:"
             cat package.json
