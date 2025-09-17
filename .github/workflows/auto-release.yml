@@ -228,36 +228,34 @@ jobs:
       - name: 🔨 Build Electron main process
         run: |
           echo "🔨 Compiling TypeScript for Electron..."
-          # Компилируем в отдельную папку, чтобы не перезаписать React build
-          mkdir -p build/electron
+          # Компилируем TypeScript для Electron
           npx tsc -p tsconfig.electron.json
           echo "📁 Checking compiled files..."
-          ls -la build/electron/ || echo "build/electron/ folder not found"
-          
-          # Копируем скомпилированные файлы в build/dist
-          if [ -f "build/electron/main.js" ]; then
-            echo "✅ main.js found at build/electron/main.js"
-            cp build/electron/main.js build/dist/main.js
+          ls -la build/dist/ || echo "build/dist/ folder not found"
+
+          # Проверяем что файлы скомпилированы
+          if [ -f "build/dist/main.js" ]; then
+            echo "✅ main.js found at build/dist/main.js"
           else
             echo "❌ main.js not found, checking structure:"
-            find build/electron -name "*.js" -type f
+            find build/dist -name "*.js" -type f
             exit 1
           fi
-          
-          if [ -f "build/electron/preload.js" ]; then
-            echo "✅ preload.js found at build/electron/preload.js"
-            cp build/electron/preload.js build/dist/preload.js
+
+          if [ -f "build/dist/preload.js" ]; then
+            echo "✅ preload.js found at build/dist/preload.js"
           else
             echo "❌ preload.js not found, checking structure:"
-            find build/electron -name "*.js" -type f
+            find build/dist -name "*.js" -type f
             exit 1
           fi
 
       - name: 📁 Prepare files for electron-builder
         run: |
           echo "📁 Preparing files for electron-builder..."
-          cp -r build/dist ./dist
-          
+          # Создаем символическую ссылку вместо копирования для экономии места
+          ln -sf build/dist ./dist
+
           # Проверяем что все файлы на месте
           if [ ! -f "dist/main.js" ]; then
             echo "❌ main.js not found"
