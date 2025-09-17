@@ -347,6 +347,8 @@ export class PortScanner {
       return this.performScanSimple(request, progressCallback)
     }
 
+    console.log('🚀 Starting advanced scan implementation')
+
     this.isScanning = true
     this.scanResults = []
     this.activeWorkers = 0
@@ -379,19 +381,25 @@ export class PortScanner {
 
     try {
       // Создаем задачи для каждого IP адреса
-      const ipTasks = targets.map(ip => async (): Promise<ScanResult[]> => {
-        if (!this.isScanning) return []
+      const ipTasks = targets.map((ip, ipIndex) => async (): Promise<ScanResult[]> => {
+        if (!this.isScanning) {
+          console.log(`⏹️ IP ${ip} cancelled - scanning stopped`)
+          return []
+        }
 
         const ipResults: ScanResult[] = []
-        console.log(`📍 Processing IP: ${ip}`)
+        console.log(`📍 Processing IP ${ipIndex + 1}/${targets.length}: ${ip}`)
 
         // Разбиваем порты на группы для равномерного распределения
         const portGroups = this.createPortGroups(ports, Math.ceil(ports.length / optimalConcurrency))
         console.log(`📦 Created ${portGroups.length} port groups for IP ${ip}`)
 
         // Создаем задачи для каждой группы портов
-        const portGroupTasks = portGroups.map(portGroup => async (): Promise<ScanResult[]> => {
-          if (!this.isScanning) return []
+        const portGroupTasks = portGroups.map((portGroup, groupIndex) => async (): Promise<ScanResult[]> => {
+          if (!this.isScanning) {
+            console.log(`⏹️ Port group ${groupIndex} cancelled - scanning stopped`)
+            return []
+          }
 
           // Проверяем использование памяти перед каждой группой (только в production)
           if (process.env.NODE_ENV !== 'test' && !this.checkMemoryUsage()) {
@@ -400,9 +408,9 @@ export class PortScanner {
             return []
           }
 
-          console.log(`🔍 Scanning port group: ${portGroup.slice(0, 3).join(',')}... (${portGroup.length} ports)`)
+          console.log(`🔍 Scanning port group ${groupIndex}: ${portGroup.slice(0, 3).join(',')}... (${portGroup.length} ports)`)
           const groupResult = await this.scanPortGroup(ip, portGroup, timeout)
-          console.log(`✅ Port group completed: ${groupResult.length} results`)
+          console.log(`✅ Port group ${groupIndex} completed: ${groupResult.length}/${portGroup.length} results`)
           return groupResult
         })
 
@@ -423,7 +431,7 @@ export class PortScanner {
           ipResults.push(...groupResult)
         }
 
-        console.log(`📊 IP ${ip} completed: ${ipResults.length} results`)
+        console.log(`📊 IP ${ip} completed: ${ipResults.length}/${ports.length} results`)
         return ipResults
       })
 
@@ -450,9 +458,13 @@ export class PortScanner {
 
     } catch (error) {
       console.error('Scan error:', error)
+      if (error instanceof Error) {
+        console.error('Error details:', error.message, error.stack)
+      }
     } finally {
       this.isScanning = false
       this.activeWorkers = 0
+      console.log(`🏁 Scan finished. Final state: isScanning=${this.isScanning}, activeWorkers=${this.activeWorkers}`)
     }
 
     this.scanResults = results
@@ -460,7 +472,15 @@ export class PortScanner {
     // Финализируем метрики
     this.finalizeMetrics()
 
-    console.log(`✅ Scan completed: ${results.length} results, ${this.scanMetrics?.scanSpeed?.toFixed(1)} ports/sec`)
+    console.log(`✅ Scan completed: ${results.length}/${totalScans} results collected`)
+    console.log(`📊 Final metrics:`, {
+      totalPorts: this.scanMetrics?.totalPorts,
+      scannedPorts: this.scanMetrics?.scannedPorts,
+      openPorts: this.scanMetrics?.openPorts,
+      closedPorts: this.scanMetrics?.closedPorts,
+      scanSpeed: this.scanMetrics?.scanSpeed?.toFixed(1) + ' ports/sec',
+      duration: this.scanMetrics?.duration ? (this.scanMetrics.duration / 1000).toFixed(1) + 's' : 'N/A'
+    })
 
     return results
   }
