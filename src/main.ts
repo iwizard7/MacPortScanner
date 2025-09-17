@@ -1,7 +1,8 @@
-import { app, BrowserWindow, ipcMain, Menu, shell } from 'electron'
 import { exec } from 'child_process'
 import { promisify } from 'util'
 import * as path from 'path'
+import * as os from 'os'
+import * as fs from 'fs'
 import Store from 'electron-store'
 import { PortScanner } from './lib/port-scanner'
 import type { ScanRequest, ScanResult, SystemInfo, AppSettings, ScanProgress } from './types'
@@ -10,6 +11,24 @@ const execAsync = promisify(exec)
 const store = new Store()
 
 const scanner = new PortScanner()
+
+// Импортируем electron модули
+const electron = require('electron')
+const app = electron.app
+const BrowserWindow = electron.BrowserWindow
+const ipcMain = electron.ipcMain
+const Menu = electron.Menu
+const shell = electron.shell
+const dialog = electron.dialog
+
+// Проверяем, что app определен
+if (!app) {
+  console.error('Electron app is not defined, skipping Electron code')
+  process.exit(0)
+}
+
+console.log('Electron app loaded successfully:', typeof app)
+console.log('Available app methods:', Object.getOwnPropertyNames(app).slice(0, 10))
 
 // Включаем garbage collection для предотвращения утечек памяти
 if (process.env.NODE_ENV === 'development') {
@@ -44,6 +63,8 @@ function createWindow(): void {
 
   mainWindow.once('ready-to-show', () => {
     mainWindow.show()
+    // Настраиваем IPC обработчики после создания окна
+    setupIpcHandlers(mainWindow)
   })
 
   // Создаем меню для macOS
@@ -153,84 +174,124 @@ function createWindow(): void {
   Menu.setApplicationMenu(menu)
 }
 
-// IPC обработчики
-ipcMain.handle('start-scan', async (event, request: ScanRequest) => {
-  console.log('🔧 Main process received scan request:', {
-    target: request.target,
-    portsCount: request.ports?.length || 0,
-    scanType: request.scanType,
-    timeout: request.timeout,
-    method: request.method
-  })
+// IPC обработчики - регистрируем после создания окна
+function setupIpcHandlers(mainWindow: any) {
+  try {
+    ipcMain.handle('start-scan', async (event: any, request: ScanRequest) => {
+      console.log('🔧 Main process received scan request:', {
+        target: request.target,
+        portsCount: request.ports?.length || 0,
+        scanType: request.scanType,
+        timeout: request.timeout,
+        method: request.method
+      })
 
-  console.log('🔧 Ports array length:', request.ports?.length)
-  console.log('🔧 First 10 ports:', request.ports?.slice(0, 10))
-  console.log('🔧 Last 10 ports:', request.ports?.slice(-10))
+      console.log('🔧 Ports array length:', request.ports?.length)
+      console.log('🔧 First 10 ports:', request.ports?.slice(0, 10))
+      console.log('🔧 Last 10 ports:', request.ports?.slice(-10))
 
-  const result = await scanner.performScan(request, (progress) => {
-    event.sender.send('scan-progress', progress)
-  })
+      const result = await scanner.performScan(request, (progress) => {
+        event.sender.send('scan-progress', progress)
+      })
 
-  console.log('🔧 Main process scan completed:', result?.length || 0, 'results')
-  return result
-})
-
-ipcMain.handle('stop-scan', () => {
-  scanner.stopScan()
-})
-
-ipcMain.handle('get-scan-metrics', () => {
-  return scanner.getMetrics()
-})
-
-ipcMain.handle('get-system-info', async (): Promise<SystemInfo> => {
-  const os = require('os')
-  return {
-    platform: process.platform,
-    arch: process.arch,
-    cpuModel: os.cpus()[0].model,
-    totalMemory: os.totalmem(),
-    networkInterfaces: os.networkInterfaces()
-  }
-})
-
-ipcMain.handle('save-settings', (event, settings) => {
-  store.set('settings', settings)
-})
-
-ipcMain.handle('load-settings', () => {
-  return store.get('settings', {})
-})
-
-ipcMain.handle('export-results', (event, results: ScanResult[]) => {
-  const { dialog } = require('electron')
-  const fs = require('fs')
-  
-  dialog.showSaveDialog({
-    title: 'Экспорт результатов сканирования',
-    defaultPath: `scan-results-${new Date().toISOString().split('T')[0]}.json`,
-    filters: [
-      { name: 'JSON файлы', extensions: ['json'] },
-      { name: 'CSV файлы', extensions: ['csv'] },
-      { name: 'Все файлы', extensions: ['*'] }
-    ]
-  }).then((result: any) => {
-    if (!result.canceled && result.filePath) {
-      const data = JSON.stringify(results, null, 2)
-      fs.writeFileSync(result.filePath, data)
+      console.log('🔧 Main process scan completed:', result?.length || 0, 'results')
+      return result
+    })
+  } catch (error: any) {
+    if (!error.message.includes('second handler')) {
+      throw error
     }
-  })
-})
+  }
+
+  try {
+    ipcMain.handle('stop-scan', () => {
+      scanner.stopScan()
+    })
+  } catch (error: any) {
+    if (!error.message.includes('second handler')) {
+      throw error
+    }
+  }
+
+  try {
+    ipcMain.handle('get-scan-metrics', () => {
+      return scanner.getMetrics()
+    })
+  } catch (error: any) {
+    if (!error.message.includes('second handler')) {
+      throw error
+    }
+  }
+
+  try {
+    ipcMain.handle('get-system-info', async (): Promise<SystemInfo> => {
+      return {
+        platform: process.platform,
+        arch: process.arch,
+        cpuModel: os.cpus()[0].model,
+        totalMemory: os.totalmem(),
+        networkInterfaces: os.networkInterfaces()
+      }
+    })
+  } catch (error: any) {
+    if (!error.message.includes('second handler')) {
+      throw error
+    }
+  }
+
+  try {
+    ipcMain.handle('save-settings', (event: any, settings: any) => {
+      store.set('settings', settings)
+    })
+  } catch (error: any) {
+    if (!error.message.includes('second handler')) {
+      throw error
+    }
+  }
+
+  try {
+    ipcMain.handle('load-settings', () => {
+      return store.get('settings', {})
+    })
+  } catch (error: any) {
+    if (!error.message.includes('second handler')) {
+      throw error
+    }
+  }
+
+  try {
+    ipcMain.handle('export-results', (event: any, results: ScanResult[]) => {
+      dialog.showSaveDialog(mainWindow, {
+        title: 'Экспорт результатов сканирования',
+        defaultPath: `scan-results-${new Date().toISOString().split('T')[0]}.json`,
+        filters: [
+          { name: 'JSON файлы', extensions: ['json'] },
+          { name: 'CSV файлы', extensions: ['csv'] },
+          { name: 'Все файлы', extensions: ['*'] }
+        ]
+      }).then((result: any) => {
+        if (!result.canceled && result.filePath) {
+          const data = JSON.stringify(results, null, 2)
+          fs.writeFileSync(result.filePath, data)
+        }
+      })
+    })
+  } catch (error: any) {
+    if (!error.message.includes('second handler')) {
+      throw error
+    }
+  }
+}
 
 // Обработчики приложения
-app.whenReady().then(() => {
+app.on('ready', () => {
   createWindow()
+})
 
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow()
-    }
-  })
+app.on('activate', () => {
+  if (BrowserWindow.getAllWindows().length === 0) {
+    createWindow()
+  }
 })
 
 app.on('window-all-closed', () => {

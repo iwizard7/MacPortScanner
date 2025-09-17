@@ -564,8 +564,12 @@ function App() {
                         </div>
                         <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                           <div>
-                            <div className="text-muted-foreground">Всего портов</div>
+                            <div className="text-muted-foreground">Планировалось</div>
                             <div className="font-medium">{scanMetrics.totalPorts}</div>
+                          </div>
+                          <div>
+                            <div className="text-muted-foreground">Просканировано</div>
+                            <div className="font-medium">{scanMetrics.scannedPorts || scanMetrics.totalPorts}</div>
                           </div>
                           <div>
                             <div className="text-muted-foreground">Открытых</div>
@@ -575,9 +579,18 @@ function App() {
                             <div className="text-muted-foreground">Закрытых</div>
                             <div className="font-medium text-gray-600">{scanMetrics.closedPorts}</div>
                           </div>
+                        </div>
+                        <div className="mt-2 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          <div>
+                            <div className="text-muted-foreground">Таймаутов</div>
+                            <div className="font-medium text-orange-600">{scanMetrics.timeoutPorts || 0}</div>
+                          </div>
                           <div>
                             <div className="text-muted-foreground">Макс. потоков</div>
                             <div className="font-medium text-blue-600">{scanMetrics.maxConcurrentWorkers || 'N/A'}</div>
+                          </div>
+                          <div className="md:col-span-2">
+                            {/* Предупреждение о прерывании убрано, так как используется последовательное сканирование */}
                           </div>
                         </div>
                         {scanMetrics.averageActiveWorkers && (
