@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![MacPortScanner Logo](https://img.shields.io/badge/MacPortScanner-v1.5.1-blue?style=for-the-badge&logo=apple)
+![MacPortScanner Logo](https://img.shields.io/badge/MacPortScanner-v1.5.3-blue?style=for-the-badge&logo=apple)
 
 **🚀 Профессиональный сканер портов для macOS с оптимизацией для Apple Silicon**
 
