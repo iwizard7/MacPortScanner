@@ -234,6 +234,10 @@ function App() {
 
     try {
       console.log('🚀 Starting scan with request:', request)
+      console.log('📋 Ports to scan:', parsedPorts.expanded.length, 'ports')
+      console.log('📋 First 10 ports:', parsedPorts.expanded.slice(0, 10))
+      console.log('📋 Last 10 ports:', parsedPorts.expanded.slice(-10))
+
       const scanResults = await window.electronAPI.startScan(request)
       console.log('📊 Scan results received:', scanResults?.length || 0, 'results')
       setResults(scanResults)

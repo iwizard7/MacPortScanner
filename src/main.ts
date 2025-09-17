@@ -155,9 +155,24 @@ function createWindow(): void {
 
 // IPC обработчики
 ipcMain.handle('start-scan', async (event, request: ScanRequest) => {
-  return await scanner.performScan(request, (progress) => {
+  console.log('🔧 Main process received scan request:', {
+    target: request.target,
+    portsCount: request.ports?.length || 0,
+    scanType: request.scanType,
+    timeout: request.timeout,
+    method: request.method
+  })
+
+  console.log('🔧 Ports array length:', request.ports?.length)
+  console.log('🔧 First 10 ports:', request.ports?.slice(0, 10))
+  console.log('🔧 Last 10 ports:', request.ports?.slice(-10))
+
+  const result = await scanner.performScan(request, (progress) => {
     event.sender.send('scan-progress', progress)
   })
+
+  console.log('🔧 Main process scan completed:', result?.length || 0, 'results')
+  return result
 })
 
 ipcMain.handle('stop-scan', () => {
