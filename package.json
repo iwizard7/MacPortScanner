@@ -2,7 +2,7 @@
   "name": "macportscanner",
   "version": "1.4.6",
   "description": "Нативный сканер портов для macOS с поддержкой Apple Silicon",
-  "main": "dist/main.js",
+  "main": "build/dist/main.js",
   "scripts": {
     "dev": "concurrently \"npm run dev:electron\" \"npm run dev:react\"",
     "dev:electron": "tsc -p tsconfig.electron.json --outDir build/dist && electron build/dist/main.js",
@@ -84,7 +84,7 @@
       "output": "build/release"
     },
     "files": [
-      "dist/**/*",
+      "build/dist/**/*",
       "node_modules/**/*",
       "!node_modules/.cache"
     ],

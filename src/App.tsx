@@ -3,13 +3,13 @@ import { Button } from './components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './components/ui/card'
 import { Input } from './components/ui/input'
 import { Label } from './components/ui/label'
-import { Textarea } from './components/ui/textarea'
 import { Badge } from './components/ui/badge'
 import { Progress } from './components/ui/progress'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './components/ui/tabs'
 import { Alert, AlertDescription } from './components/ui/alert'
 import { Separator } from './components/ui/separator'
 import { PortInput } from './components/ui/PortInput'
+import { ScanFilters } from './components/ui/ScanFilters'
 import {
   Play,
   Square,
@@ -40,6 +40,12 @@ function App() {
   const [timeout, setTimeout] = useState(3000)
   const [portValidationErrors, setPortValidationErrors] = useState<string[]>([])
 
+  // Состояние для фильтров и поиска
+  const [searchText, setSearchText] = useState('')
+  const [statusFilter, setStatusFilter] = useState<string[]>([])
+  const [portFilter, setPortFilter] = useState('')
+  const [serviceFilter, setServiceFilter] = useState('')
+
   const commonPorts = [
     { port: 21, service: 'FTP' },
     { port: 22, service: 'SSH' },
@@ -63,6 +69,64 @@ function App() {
 
   const quickScanPorts = [22, 80, 443, 3389, 5432, 3306]
   const fullScanPorts = Array.from({ length: 1000 }, (_, i) => i + 1)
+
+  // Функция для применения фильтров к результатам
+  const applyFilters = (results: ScanResult[]): ScanResult[] => {
+    return results.filter(result => {
+      // Фильтр по статусу
+      if (statusFilter.length > 0 && !statusFilter.includes(result.status)) {
+        return false
+      }
+
+      // Фильтр по порту
+      if (portFilter) {
+        const portStr = portFilter.trim()
+        if (portStr.includes('-')) {
+          // Диапазон портов
+          const [min, max] = portStr.split('-').map(p => parseInt(p.trim()))
+          if (isNaN(min) || isNaN(max) || result.port < min || result.port > max) {
+            return false
+          }
+        } else {
+          // Конкретный порт
+          const port = parseInt(portStr)
+          if (!isNaN(port) && result.port !== port) {
+            return false
+          }
+        }
+      }
+
+      // Фильтр по сервису
+      if (serviceFilter && result.service) {
+        if (!result.service.toLowerCase().includes(serviceFilter.toLowerCase())) {
+          return false
+        }
+      }
+
+      // Текстовый поиск
+      if (searchText) {
+        const searchLower = searchText.toLowerCase()
+        const matchesPort = result.port.toString().includes(searchLower)
+        const matchesService = result.service?.toLowerCase().includes(searchLower)
+        const matchesBanner = result.banner?.toLowerCase().includes(searchLower)
+        const matchesIP = result.ip.toLowerCase().includes(searchLower)
+
+        if (!matchesPort && !matchesService && !matchesBanner && !matchesIP) {
+          return false
+        }
+      }
+
+      return true
+    })
+  }
+
+  // Функция сброса фильтров
+  const resetFilters = () => {
+    setSearchText('')
+    setStatusFilter([])
+    setPortFilter('')
+    setServiceFilter('')
+  }
 
   useEffect(() => {
     // Загружаем системную информацию
@@ -190,10 +254,12 @@ function App() {
     }
   }
 
-  const openResults = results.filter(r => r.status === 'open')
-  const closedResults = results.filter(r => r.status === 'closed')
-  const filteredResults = results.filter(r => r.status === 'filtered')
-  const timeoutResults = results.filter(r => r.status === 'timeout')
+  // Применяем фильтры к результатам
+  const filteredResults = applyFilters(results)
+  const openResults = filteredResults.filter(r => r.status === 'open')
+  const closedResults = filteredResults.filter(r => r.status === 'closed')
+  const filteredStatusResults = filteredResults.filter(r => r.status === 'filtered')
+  const timeoutResults = filteredResults.filter(r => r.status === 'timeout')
   const scanDuration = startTime && endTime ? Math.round((endTime.getTime() - startTime.getTime()) / 1000) : 0
 
   const getArchBadge = () => {
@@ -437,11 +503,16 @@ function App() {
                             Открыто: {openResults.length}
                           </Badge>
                           <Badge variant="secondary">Закрыто: {closedResults.length}</Badge>
-                          {filteredResults.length > 0 && (
-                            <Badge variant="outline">Фильтровано: {filteredResults.length}</Badge>
+                          {filteredStatusResults.length > 0 && (
+                            <Badge variant="outline">Фильтровано: {filteredStatusResults.length}</Badge>
                           )}
                           {timeoutResults.length > 0 && (
                             <Badge variant="destructive">Таймаут: {timeoutResults.length}</Badge>
+                          )}
+                          {filteredResults.length !== results.length && (
+                            <Badge variant="outline" className="bg-blue-100 text-blue-800">
+                              Показано: {filteredResults.length} из {results.length}
+                            </Badge>
                           )}
                         </div>
                       </>
@@ -450,6 +521,25 @@ function App() {
                 </div>
               </CardHeader>
               <CardContent>
+                {/* Фильтры и поиск */}
+                {results.length > 0 && (
+                  <div className="mb-6">
+                    <ScanFilters
+                      searchText={searchText}
+                      onSearchChange={setSearchText}
+                      statusFilter={statusFilter}
+                      onStatusFilterChange={setStatusFilter}
+                      portFilter={portFilter}
+                      onPortFilterChange={setPortFilter}
+                      serviceFilter={serviceFilter}
+                      onServiceFilterChange={setServiceFilter}
+                      onResetFilters={resetFilters}
+                      totalResults={results.length}
+                      filteredResults={filteredResults.length}
+                    />
+                  </div>
+                )}
+
                 {results.length === 0 && !isScanning && (
                   <Alert>
                     <Shield className="h-4 w-4" />
@@ -469,7 +559,7 @@ function App() {
                           Открытые порты ({openResults.length})
                         </h3>
                         <div className="grid gap-2">
-                          {openResults.map((result, index) => (
+                          {openResults.map((result, _index) => (
                             <div
                               key={`${result.ip}-${result.port}`}
                               className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800"
