@@ -13,7 +13,8 @@ module.exports = {
     'src/**/*.{ts,tsx}',
     '!src/**/*.d.ts',
     '!src/main.tsx',
-    '!src/main.ts'
+    '!src/main.ts',
+    '!src/lib/port-scanner.ts' // Исключаем из покрытия, так как содержит сетевые вызовы
   ],
   setupFilesAfterEnv: ['<rootDir>/src/setupTests.ts']
 };

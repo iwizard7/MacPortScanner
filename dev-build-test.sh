@@ -28,13 +28,29 @@ npm run test
 
 echo ""
 echo "🏗️ Собираем приложение и создаем DMG..."
-npm run build:electron
+
+# Удаляем старые файлы релиза перед сборкой
+echo "🗑️  Удаляем старые файлы релиза..."
+if [ -d "build/release" ]; then
+    echo "📁 Найдена папка build/release/, удаляем все файлы релиза..."
+    rm -f build/release/*.dmg build/release/*.zip build/release/*.blockmap build/release/*.yml 2>/dev/null || true
+    echo "✅ Старые файлы релиза удалены"
+else
+    echo "📁 Папка build/release/ не существует, пропускаем удаление"
+fi
+
+# Также проверяем и удаляем файлы релиза в других возможных местах
+echo "🔍 Ищем и удаляем файлы релиза в других местах..."
+find . -name "*.dmg" -o -name "*.zip" -o -name "*.blockmap" -o -name "latest-mac.yml" | grep -v node_modules | xargs rm -f 2>/dev/null || true
+
 npm run build:react
+npm run build:electron
 echo "📁 Подготавливаем файлы для electron-builder..."
+# Создаем ./dist для electron-builder
 rm -rf dist
 cp -r build/dist ./dist
-echo "📦 Создаем DMG файл..."
-CSC_IDENTITY_AUTO_DISCOVERY=false npx electron-builder --mac --publish never || echo "⚠️  Предупреждение: ошибка при создании DMG, но файлы могут быть созданы"
+echo "📦 Создаем файлы релиза (DMG и ZIP)..."
+CSC_IDENTITY_AUTO_DISCOVERY=false npx electron-builder --mac --publish never || echo "⚠️  Предупреждение: ошибка при создании файлов релиза, но файлы могут быть созданы"
 
 echo ""
 echo "📂 Проверяем результат сборки..."
