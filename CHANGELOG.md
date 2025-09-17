@@ -5,6 +5,15 @@
 Формат основан на [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 и этот проект придерживается [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+## [1.4.8] - 2025-09-17
+
+### 🤖 Автоматическое обновление
+- Merge remote-tracking branch 'origin/main' into main
+
+- Resolved CHANGELOG.md conflicts
+- Combined v1.5.0 (service detection by banners) with v1.4.7 (DMG config fix)
+
 ## [1.5.0] - 2025-09-17
 
 ### ✨ Добавлено
