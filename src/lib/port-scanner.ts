@@ -337,6 +337,11 @@ export class PortScanner {
       method: request.method
     })
 
+    // Проверяем начальное состояние памяти (только в production)
+    if (process.env.NODE_ENV !== 'test' && !this.checkMemoryUsage()) {
+      throw new Error('Недостаточно памяти для начала сканирования')
+    }
+
     // Для тестирования используем простую реализацию
     if (process.env.NODE_ENV === 'test') {
       return this.performScanSimple(request, progressCallback)
@@ -353,6 +358,12 @@ export class PortScanner {
     console.log('🔢 Ports to scan:', ports?.slice(0, 10), ports?.length > 10 ? `... and ${ports.length - 10} more` : '')
 
     const totalScans = targets.length * ports.length
+
+    // Проверяем лимиты для предотвращения переполнения памяти
+    const MAX_PORTS = 10000 // Максимум 10k портов
+    if (totalScans > MAX_PORTS) {
+      throw new Error(`Слишком большой диапазон портов: ${totalScans}. Максимум: ${MAX_PORTS}`)
+    }
 
     // Инициализируем метрики
     this.initializeMetrics(totalScans)
@@ -381,6 +392,14 @@ export class PortScanner {
         // Создаем задачи для каждой группы портов
         const portGroupTasks = portGroups.map(portGroup => async (): Promise<ScanResult[]> => {
           if (!this.isScanning) return []
+
+          // Проверяем использование памяти перед каждой группой (только в production)
+          if (process.env.NODE_ENV !== 'test' && !this.checkMemoryUsage()) {
+            console.error('🚨 Critical memory usage! Stopping scan.')
+            this.isScanning = false
+            return []
+          }
+
           console.log(`🔍 Scanning port group: ${portGroup.slice(0, 3).join(',')}... (${portGroup.length} ports)`)
           const groupResult = await this.scanPortGroup(ip, portGroup, timeout)
           console.log(`✅ Port group completed: ${groupResult.length} results`)
@@ -590,38 +609,16 @@ export class PortScanner {
   private calculateOptimalConcurrency(totalPorts: number, totalIPs: number): number {
     const totalScans = totalPorts * totalIPs
 
-    // Базовые значения для разных размеров задач
-    let baseConcurrency: number
-
-    if (totalScans <= 100) {
-      baseConcurrency = 10 // Маленькие задачи
-    } else if (totalScans <= 1000) {
-      baseConcurrency = 25 // Средние задачи
-    } else if (totalScans <= 10000) {
-      baseConcurrency = 50 // Большие задачи
+    // Для очень больших диапазонов сильно ограничиваем параллелизм
+    if (totalScans > 5000) {
+      return 5 // Максимум 5 одновременных соединений для больших диапазонов
+    } else if (totalScans > 1000) {
+      return 10 // Максимум 10 для средних диапазонов
+    } else if (totalScans > 100) {
+      return 25 // Максимум 25 для маленьких диапазонов
     } else {
-      baseConcurrency = 100 // Очень большие задачи
+      return 50 // Максимум 50 для очень маленьких диапазонов
     }
-
-    // Корректировка на основе архитектуры процессора
-    const archMultiplier = process.arch === 'arm64' ? 1.5 : 1.0
-    baseConcurrency = Math.floor(baseConcurrency * archMultiplier)
-
-    // Корректировка на основе доступной памяти
-    const memUsage = process.memoryUsage()
-    const availableMemoryMB = (memUsage.heapTotal - memUsage.heapUsed) / 1024 / 1024
-
-    if (availableMemoryMB < 50) {
-      baseConcurrency = Math.floor(baseConcurrency * 0.5) // Снижаем при низкой памяти
-    } else if (availableMemoryMB < 100) {
-      baseConcurrency = Math.floor(baseConcurrency * 0.75) // Немного снижаем
-    }
-
-    // Ограничиваем максимальное количество потоков
-    const maxConcurrency = Math.min(baseConcurrency, 200)
-
-    // Минимум 5 потоков для обеспечения многопоточности
-    return Math.max(maxConcurrency, 5)
   }
 
   /**
@@ -630,11 +627,48 @@ export class PortScanner {
   private createPortGroups(ports: number[], groupSize: number): number[][] {
     const groups: number[][] = []
 
-    for (let i = 0; i < ports.length; i += groupSize) {
-      groups.push(ports.slice(i, i + groupSize))
+    // Для очень больших диапазонов уменьшаем размер групп
+    let actualGroupSize = groupSize
+    if (ports.length > 1000) {
+      actualGroupSize = Math.max(10, Math.floor(groupSize / 4)) // Минимум 10 портов в группе
+    } else if (ports.length > 500) {
+      actualGroupSize = Math.max(20, Math.floor(groupSize / 2)) // Минимум 20 портов в группе
+    }
+
+    for (let i = 0; i < ports.length; i += actualGroupSize) {
+      groups.push(ports.slice(i, i + actualGroupSize))
     }
 
     return groups
+  }
+
+  /**
+   * Проверяет использование памяти и при необходимости очищает ее
+   */
+  private checkMemoryUsage(): boolean {
+    const memUsage = process.memoryUsage()
+    const usedMB = memUsage.heapUsed / 1024 / 1024
+    const totalMB = memUsage.heapTotal / 1024 / 1024
+    const usagePercent = (usedMB / totalMB) * 100
+
+    console.log(`📊 Memory usage: ${usedMB.toFixed(1)}MB / ${totalMB.toFixed(1)}MB (${usagePercent.toFixed(1)}%)`)
+
+    // Если использование памяти превышает 80%, пытаемся очистить
+    if (usagePercent > 80) {
+      if (global.gc) {
+        console.log('🧹 Running garbage collection...')
+        global.gc()
+        return true // Была выполнена очистка
+      }
+    }
+
+    // Если использование памяти превышает 90%, это критично
+    if (usagePercent > 90) {
+      console.warn('⚠️ Critical memory usage detected!')
+      return false // Критическое использование памяти
+    }
+
+    return true // Все в порядке
   }
 
   /**
@@ -645,6 +679,12 @@ export class PortScanner {
 
     try {
       console.log(`🔄 Starting port group scan: ${ports.length} ports for ${host}`)
+
+      // Для больших групп добавляем паузу для предотвращения перегрузки
+      if (ports.length > 100) {
+        await this.delay(10) // Небольшая пауза перед большой группой
+      }
+
       // Используем Promise.allSettled для лучшей обработки ошибок
       const promises = ports.map(port => this.scanPort(host, port, timeout))
       const results = await Promise.allSettled(promises)
@@ -667,11 +707,25 @@ export class PortScanner {
         }
       })
 
+      // Принудительная очистка памяти после больших групп
+      if (ports.length > 50) {
+        if (global.gc) {
+          global.gc()
+        }
+      }
+
       console.log(`✅ Port group scan completed: ${scanResults.length}/${ports.length} results for ${host}`)
       return scanResults
     } finally {
       this.activeWorkers--
     }
+  }
+
+  /**
+   * Создает задержку для предотвращения перегрузки
+   */
+  private delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms))
   }
 
   /**
@@ -688,7 +742,7 @@ export class PortScanner {
 
     // Функция для выполнения следующей задачи
     const executeNext = async (): Promise<void> => {
-      if (index >= tasks.length) return
+      if (index >= tasks.length || !this.isScanning) return
 
       const currentIndex = index++
       const task = tasks[currentIndex]
@@ -710,20 +764,43 @@ export class PortScanner {
     // Запускаем начальный набор задач
     const initialPromises: Promise<void>[] = []
     for (let i = 0; i < Math.min(maxConcurrent, tasks.length); i++) {
-      initialPromises.push(executeNext())
-    }
-
-    // Ждем завершения начальных задач и запускаем следующие
-    while (completed < tasks.length) {
-      await Promise.race(initialPromises.filter(p => p !== undefined))
-      // Запускаем следующую задачу, если есть место
-      if (index < tasks.length && initialPromises.length < maxConcurrent) {
+      if (this.isScanning) {
         initialPromises.push(executeNext())
       }
     }
 
-    // Ждем завершения всех задач
-    await Promise.all(initialPromises)
+    // Ждем завершения начальных задач и запускаем следующие
+    while (completed < tasks.length && this.isScanning) {
+      // Проверяем использование памяти перед продолжением (только в production)
+      if (process.env.NODE_ENV !== 'test' && !this.checkMemoryUsage()) {
+        console.error('🚨 Critical memory usage detected! Stopping queue processing.')
+        this.isScanning = false
+        break
+      }
+
+      try {
+        await Promise.race(initialPromises.filter(p => p !== undefined && p !== null))
+      } catch (error) {
+        console.error('Promise race error:', error)
+      }
+
+      // Запускаем следующую задачу, если есть место и сканирование не остановлено
+      if (index < tasks.length && initialPromises.length < maxConcurrent && this.isScanning) {
+        initialPromises.push(executeNext())
+      }
+
+      // Удаляем завершенные промисы
+      const activePromises = initialPromises.filter(p => p !== undefined && p !== null)
+      initialPromises.length = 0
+      initialPromises.push(...activePromises)
+    }
+
+    // Ждем завершения всех оставшихся задач
+    try {
+      await Promise.all(initialPromises.filter(p => p !== undefined && p !== null))
+    } catch (error) {
+      console.error('Final promise all error:', error)
+    }
 
     return results.filter(result => result !== undefined)
   }

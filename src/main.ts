@@ -11,6 +11,12 @@ const store = new Store()
 
 const scanner = new PortScanner()
 
+// Включаем garbage collection для предотвращения утечек памяти
+if (process.env.NODE_ENV === 'development') {
+  app.commandLine.appendSwitch('--expose-gc')
+  app.commandLine.appendSwitch('--max-old-space-size', '4096') // Увеличиваем лимит памяти до 4GB
+}
+
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
     width: 1400,
